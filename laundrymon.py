@@ -6,7 +6,6 @@ app = Flask(__name__)
 STATUS = ["none","wash","dry","both"]
 @app.route("/")
 def hello():
-    f = open("status.txt", "r")
     statusn=getstatus.getstatus()+1
     status = STATUS[statusn]
     print(status)
