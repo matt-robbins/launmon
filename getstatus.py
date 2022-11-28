@@ -4,6 +4,7 @@ import os
 import mmap
 from collections import deque
 import functools
+import pytail
 
 @functools.cache
 def file2hist(file):
@@ -26,8 +27,8 @@ def hist(x):
     return h
 
 def tail(filename, n=10):
-    with open(filename) as f:
-        return deque(f, n)
+    with open(filename,'rb') as f:
+        return pytail.tail(f, n)
 
 def stream2hist():
     lines = tail('data/current.txt',60)
