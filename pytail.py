@@ -22,7 +22,7 @@ def tail(f, n=1, bsize=4098):
 
 if __name__ == "__main__":
 
-    with open(sys.argv[1],'r') as f:
+    with open(sys.argv[1],'rb') as f:
         lines = tail(f,10)
         print(lines)
 
