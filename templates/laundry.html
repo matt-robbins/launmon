@@ -2,6 +2,35 @@
 
 {% block content %}
     <h1>{% block title %} Welcome to LaundryMon {% endblock %}</h1>
-	<p style="background-color:{{ dcolor }};">{{ dtext }}</p>
-        <p style="background-color:{{ wcolor }};">{{ wtext }}</p>
+	<p id="dryer" style="background-color:gray;">"?"</p>
+    <p id="washer" style="background-color:gray;">"?"</p>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+        $(function() {
+            AVAIL = {"yes": {"color": "green", "text": "Available" },
+                    "no": {"color": "red", "text": "In Use"}}
+
+            function setMachine(machine,avail){
+                $(machine).css("background-color",AVAIL[avail].color).text(AVAIL[avail].text)
+            }
+            
+            function update() {
+                $.getJSON($SCRIPT_ROOT + '/status', {}, function(data) {
+
+                    wash = data & 1 ? "no" : "yes"
+                    dry = data & 2 ? "no" : "yes"
+                    console.log(wash)
+                    console.log(dry)
+                    setMachine("#washer",wash)
+                    setMachine("#dryer",dry)
+                    
+                })
+            }
+            update()
+            setInterval(function() {
+                update()
+            }, 1000);
+        });
+    </script>
 {% endblock %}

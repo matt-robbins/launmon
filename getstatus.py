@@ -8,10 +8,9 @@ import pytail
 
 @functools.cache
 def file2hist(file):
-    f = open(file, "r")
-    lines = f.readlines()
-    x = numpy.array([float(l) for l in lines])
-    f.close()
+    with open(file, "r") as f:
+        lines = f.readlines()
+        x = numpy.array([float(l) for l in lines])
     return hist(x)
 
 def compare(ha,hb):
