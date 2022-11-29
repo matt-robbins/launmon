@@ -1,9 +1,7 @@
 from flask import Flask, render_template
-from turbo_flask import Turbo
 import getstatus
 
 app = Flask(__name__)
-turbo = Turbo(app)
 
 STATUS = ["none","wash","dry","both"]
 @app.route("/")
