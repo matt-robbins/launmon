@@ -8,7 +8,7 @@ def play_file(f):
 
     with open(f) as fh:
         for l in fh.readlines():
-            sock.sendto("ts %s" % l, ("127.0.0.1", 5005))
+            sock.sendto(bytes("ts %s" % l,'utf8'), ("127.0.0.1", 5004))
 
 if __name__ == "__main__":
     play_file(sys.argv[1])

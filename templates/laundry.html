@@ -1,26 +1,54 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>{% block title %} Welcome to LaundryMon {% endblock %}</h1>
-	<p id="dryer" style="background-color:gray;">"?"</p>
-    <p id="washer" style="background-color:gray;">"?"</p>
+    <h1>{% block title %} 375 Lincoln Place Laundry Monitor {% endblock %}</h1>
+	    
+    <div id="4f">
+        <h2>Fourth Floor</h2>
+        <p id="dryer4" style="background-color:gray;">"?"</p>
+        <p id="washer4" style="background-color:gray;">"?"</p>
+    </div>
+    <div id="3f">
+        <h2>Third Floor</h2>
+        <p id="dryer3" style="background-color:gray;">"?"</p>
+        <p id="washer3" style="background-color:gray;">"?"</p>
+    </div>
+    <div id="2f">
+        <h2>Second Floor</h2>
+        <p id="dryer2" style="background-color:gray;">"?"</p>
+        <p id="washer2" style="background-color:gray;">"?"</p>
+    </div>
+    <div id="1f">
+        <h2>Basement</h2>
+        <p id="dryer1" style="background-color:gray;">"?"</p>
+        <p id="washer1" style="background-color:gray;">"?"</p>
+    </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script>
         $(function() {
             AVAIL = {"yes": {"color": "green", "text": "Available" },
-                    "no": {"color": "red", "text": "In Use"}}
+                    "no": {"color": "red", "text": "In Use"},
+                    "?": {"color": "gray", "text": "No Data"}}
 
             function setMachine(machine,avail){
                 $(machine).css("background-color",AVAIL[avail].color).text(AVAIL[avail].text)
             }
             
             function update() {
-                $.getJSON($SCRIPT_ROOT + '/status', {}, function(data) {
-                    wash = data & 1 ? "no" : "yes"
-                    dry = data & 2 ? "no" : "yes"
-                    setMachine("#washer",wash)
-                    setMachine("#dryer",dry)
+                $.getJSON($SCRIPT_ROOT + '/status-json', {}, function(data) {
+                    for (floor in data) {
+                        if (!(["none","wash","dry","both"].includes(data[floor]))){
+                            setMachine("#washer"+floor,"?")
+                            setMachine("#dryer"+floor,"?")
+                            continue
+                        }
+                        w = ["wash","both"].includes(data[floor]) ? "no": "yes"
+                        d = ["dry", "both"].includes(data[floor]) ? "no": "yes"
+                        
+                        setMachine("#washer"+floor,w)
+                        setMachine("#dryer"+floor,d)
+                    }                    
                 })
             }
             update()

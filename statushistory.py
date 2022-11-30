@@ -66,7 +66,8 @@ def setstatus(machine,status):
 
         pass # todo hook in some kind of notification
     try:
-        os.symlink(STATUS_PATH+'/'+status,STATUS_PATH+'/'+machine)
+        os.symlink(STATUS_PATH+'/'+status,STATUS_PATH+'/tmp')
+        os.rename(STATUS_PATH+'/tmp',STATUS_PATH+'/'+machine)
     except FileExistsError as e:
         pass
     old_status=status
