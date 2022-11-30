@@ -17,14 +17,10 @@
             
             function update() {
                 $.getJSON($SCRIPT_ROOT + '/status', {}, function(data) {
-
                     wash = data & 1 ? "no" : "yes"
                     dry = data & 2 ? "no" : "yes"
-                    console.log(wash)
-                    console.log(dry)
                     setMachine("#washer",wash)
                     setMachine("#dryer",dry)
-                    
                 })
             }
             update()
