@@ -59,7 +59,7 @@ class SignalProcessor:
 class SocketReader:
 
     def sanitize_data(self,data):
-        return float(data.split()[1])
+        return float(data.strip())
 
     def run(self):
         while True:
