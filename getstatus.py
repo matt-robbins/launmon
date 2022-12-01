@@ -1,8 +1,4 @@
 import numpy
-import subprocess
-import os
-import mmap
-from collections import deque
 import functools
 import pytail
 
@@ -36,8 +32,6 @@ def stream2hist():
 
     hs = hist(x)
     return hs
-
-
 
 def getstatus():
     hs = stream2hist()

@@ -2,8 +2,10 @@ from flask import Flask, render_template
 import getstatus
 import constants as const
 import json
+import db
 
 app = Flask(__name__)
+db = db.LaundryDb()
 
 STATUS = ["none","wash","dry","both"]
 @app.route("/")
@@ -17,6 +19,11 @@ def status():
 @app.route("/status-json")
 def status_json():
     status = {'1':'???','2':'???','3':'???','4':'???'}
+    statusd = db.getLatest()
+    d = dict(zip([s[0] for s in statusd],[s[1] for s in statusd]))
+
+    return json.dumps(d)
+
     for floor in ['1','2','3','4']:
         try:
             with open(const.STATUS_PATH+'/'+floor,'r') as f:
