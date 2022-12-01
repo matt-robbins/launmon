@@ -51,17 +51,19 @@
                 $.getJSON($SCRIPT_ROOT + '/status-json', {}, function(data) {
                     for (floor in data) {
                         d = new Date(data[floor][1]+"Z")
-                        $("#t"+floor).text("Last Updated "+d.toLocaleTimeString())
+                        
                         if (!(["none","wash","dry","both"].includes(data[floor][0]))){
                             setMachine("#washer"+floor,"?",d)
                             setMachine("#dryer"+floor,"?",d)
                             continue
                         }
                         if (Date.now()-d > 86400*1000) {
+                            $("#t"+floor).text("Last Updated "+d.toLocaleDateString())
                             setMachine("#washer"+floor,"?",d)
                             setMachine("#dryer"+floor,"?",d)
                             continue
                         }
+                        $("#t"+floor).text("Last Updated "+d.toLocaleTimeString())
                         w = ["wash","both"].includes(data[floor][0]) ? "no": "yes"
                         d = ["dry", "both"].includes(data[floor][0]) ? "no": "yes"
                         
