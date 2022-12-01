@@ -8,7 +8,7 @@ def play_file(f,port):
 
     with open(f) as fh:
         for l in fh.readlines():
-            sock.sendto(bytes("ts %s" % l,'utf8'), ("127.0.0.1", port))
+            sock.sendto(bytes(l,'utf8'), ("127.0.0.1", port))
 
 if __name__ == "__main__":
 

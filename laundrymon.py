@@ -20,8 +20,8 @@ def status():
 def status_json():
     status = {'1':'???','2':'???','3':'???','4':'???'}
     statusd = db.getLatest()
-    d = dict(zip([s[0] for s in statusd],[s[1] for s in statusd]))
-
+    d = dict(zip([s[0] for s in statusd],[s[1:] for s in statusd]))
+    print(json.dumps(d))
     return json.dumps(d)
 
     for floor in ['1','2','3','4']:

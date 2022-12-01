@@ -3,25 +3,37 @@
 {% block content %}
     <h1>{% block title %} 375 Lincoln Place Laundry Monitor {% endblock %}</h1>
 	    
-    <div id="4f">
-        <h2>Fourth Floor</h2>
-        <p id="dryer4" style="background-color:gray;">"?"</p>
-        <p id="washer4" style="background-color:gray;">"?"</p>
+    <div id="4f" class="card">
+        <div class="card-body">
+            <h5 class="card-title">Fourth Floor</h5>
+            <p id="t4" class="card-subtitle">sometime</p>
+            <p class="card-text" id="dryer4" style="background-color:gray;">"?"</p>
+            <p class="card-text" id="washer4" style="background-color:gray;">"?"</p>
+        </div>
     </div>
-    <div id="3f">
-        <h2>Third Floor</h2>
-        <p id="dryer3" style="background-color:gray;">"?"</p>
-        <p id="washer3" style="background-color:gray;">"?"</p>
+    <div id="3f" class="card">
+        <div class="card-body">
+            <h5 class="card-title">Third Floor</h5>
+            <p id="t3" class="card-subtitle">sometime</p>
+            <p id="dryer3" style="background-color:gray;">"?"</p>
+            <p id="washer3" style="background-color:gray;">"?"</p>
+        </div>
     </div>
-    <div id="2f">
-        <h2>Second Floor</h2>
-        <p id="dryer2" style="background-color:gray;">"?"</p>
-        <p id="washer2" style="background-color:gray;">"?"</p>
+    <div id="2f" class="card">
+        <div class="card-body">
+            <h5 class="card-title">Second Floor</h5>
+            <p id="t2" class="card-subtitle">sometime</p>
+            <p id="dryer2" style="background-color:gray;">"?"</p>
+            <p id="washer2" style="background-color:gray;">"?"</p>
+        </div>
     </div>
-    <div id="1f">
-        <h2>Basement</h2>
-        <p id="dryer1" style="background-color:gray;">"?"</p>
-        <p id="washer1" style="background-color:gray;">"?"</p>
+    <div id="1f" class="card">
+        <div class="card-body">
+            <h5 class="card-title">Basement</h5>
+            <p id="t1" class="card-subtitle">sometime</p>
+            <p id="dryer1" style="background-color:gray;">"?"</p>
+            <p id="washer1" style="background-color:gray;">"?"</p>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -31,23 +43,30 @@
                     "no": {"color": "red", "text": "In Use"},
                     "?": {"color": "gray", "text": "No Data"}}
 
-            function setMachine(machine,avail){
+            function setMachine(machine,avail,date){
                 $(machine).css("background-color",AVAIL[avail].color).text(AVAIL[avail].text)
             }
             
             function update() {
                 $.getJSON($SCRIPT_ROOT + '/status-json', {}, function(data) {
                     for (floor in data) {
-                        if (!(["none","wash","dry","both"].includes(data[floor]))){
-                            setMachine("#washer"+floor,"?")
-                            setMachine("#dryer"+floor,"?")
+                        d = new Date(data[floor][1]+"Z")
+                        $("#t"+floor).text("Last Updated "+d.toLocaleTimeString())
+                        if (!(["none","wash","dry","both"].includes(data[floor][0]))){
+                            setMachine("#washer"+floor,"?",d)
+                            setMachine("#dryer"+floor,"?",d)
                             continue
                         }
-                        w = ["wash","both"].includes(data[floor]) ? "no": "yes"
-                        d = ["dry", "both"].includes(data[floor]) ? "no": "yes"
+                        if (Date.now()-d > 3600*1000) {
+                            setMachine("#washer"+floor,"?",d)
+                            setMachine("#dryer"+floor,"?",d)
+                            continue
+                        }
+                        w = ["wash","both"].includes(data[floor][0]) ? "no": "yes"
+                        d = ["dry", "both"].includes(data[floor][0]) ? "no": "yes"
                         
-                        setMachine("#washer"+floor,w)
-                        setMachine("#dryer"+floor,d)
+                        setMachine("#washer"+floor,w,d)
+                        setMachine("#dryer"+floor,d,d)
                     }                    
                 })
             }
