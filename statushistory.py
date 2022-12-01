@@ -1,99 +1,124 @@
 import getstatus as gs
-from collections import deque
 import numpy as np
 import socket
+import select
+import datetime
 import functools
 import os
 import sys
+import db
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 5005
+UDP_IP = "0.0.0.0"
 
 STATUS_PATH = '/tmp/laundrystatus'
-old_status = ''
 
-@functools.cache
-def get_training_histograms():
-    files = os.listdir("data")
-    ret = []
-    for f in files:
-        label = f.split('_')[0]
-        ret.append({'hist': gs.file2hist('data/%s' % f),'label':label})
+class SignalProcessor:
 
-    return ret
+    def __init__(self,N,oN):
+        self.N = N; self.oN = oN
+        self.x = np.zeros((N,1)); self.ix = 0; self.oix = -1
+        self.state = 'none'
+        self.old_state = '???'
 
-def buffer_classify(buf):
-    hs = gs.hist(buf)
-    model = get_training_histograms()
+    def process_sample(self,sample):
+        self.x[self.ix] = sample
+        # circular buffer index update
+        self.ix = self.ix + 1 if (self.ix < self.N-1) else 0
+        self.oix = self.oix + 1 if (self.oix < self.oN-1) else 0
+        if (self.oix != 0):
+            return None
 
-    scores = [gs.compare(m["hist"], hs) for m in model]
-    maxix = np.argmax(np.array(scores))
-    label = [m["label"] for m in model][maxix]
+        self.state = self.buffer_classify(self.x)
+        if (self.state == self.old_state):
+            return None
+        self.old_state = self.state
 
-    return label
+        return self.state
 
-def watch_status(machine_name,port=5005):
-    N = 100; oN = 50
-    x = np.zeros((N,1))
-    ix = 0
-    oix = -1
-    STATE = 0
+    @functools.cache
+    def get_training_histograms(self):
+        files = os.listdir("data")
+        ret = []
+        for f in files:
+            label = f.split('_')[0]
+            ret.append({'hist': gs.file2hist('data/%s' % f),'label':label})
 
-    get_training_histograms()
+        return ret
 
-    sock = socket.socket(socket.AF_INET, # Internet
-                        socket.SOCK_DGRAM) # UDP
-    sock.bind((UDP_IP, port))
-    while True:
-        data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
+    def buffer_classify(self,buf):
+        hs = gs.hist(buf)
+        model = self.get_training_histograms()
+
+        scores = [gs.compare(m["hist"], hs) for m in model]
+        maxix = np.argmax(np.array(scores))
+        label = [m["label"] for m in model][maxix]
+
+        return label
+
+
+class SocketReader:
+
+    def sanitize_data(self,data):
+        return float(data.split()[1])
+
+    def run(self):
+        while True:
+            readable, _writable,_except = select.select(self.sockets, [], [])
+            for s in readable:
+                data, addr = s.recvfrom(1024); port = s.getsockname()[1]
+                ix = self.ports.index(port)
+                sanitized = self.sanitize_data(data)
+                machine = self.machines[ix]
+
+                self.db.addCurrentReading(machine,sanitized,datetime.datetime.utcnow())
+                status = self.processors[ix].process_sample(sanitized)
+
+                if (status is None):
+                    continue
+
+                print("machine %s changed state: %s" % (machine, status))
+                self.setstatus(machine, status)
+
+    def setstatus(self,machine,status):
         try:
-            x[ix]=float(data.split()[1])
-        except Exception as e:
-            print(data)
-            continue
-        ix = ix + 1 if (ix < N-1) else 0
-        oix = oix + 1 if (oix < oN-1) else 0
-        if (oix != 0):
-            continue
+            os.symlink(STATUS_PATH+'/'+status,STATUS_PATH+'/tmp')
+            os.rename(STATUS_PATH+'/tmp',STATUS_PATH+'/'+machine)
+        except FileExistsError as e:
+            pass
+        self.db.addEvent(machine,status,datetime.datetime.utcnow())
 
-        setstatus(machine_name,buffer_classify(x))
+    def __init__(self, nlocations, base_port):
+        
+        try:
+            os.mkdir(STATUS_PATH)
+        except FileExistsError as e:
+            pass
 
-def setstatus(machine,status):
-    print(status)
-    global old_status
-    if (status!=old_status):
-        print('state changed from %s to %s' %(old_status,status))
+        for st in ['none','wash','dry','both']:
+            with open(STATUS_PATH+'/'+st,'w') as f:
+                f.write(st)
 
-        pass # todo hook in some kind of notification
-    try:
-        os.symlink(STATUS_PATH+'/'+status,STATUS_PATH+'/tmp')
-        os.rename(STATUS_PATH+'/tmp',STATUS_PATH+'/'+machine)
-    except FileExistsError as e:
-        pass
-    old_status=status
+        self.db = db.LaundryDb()
+
+        self.sockets = []
+        self.processors = []
+        self.ports = []
+        self.machines = []
+        for i in range(nlocations):
+            port = base_port+1+i
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.bind((UDP_IP, port))
+            self.ports.append(port)
+            self.sockets.append(sock)
+            self.processors.append(SignalProcessor(100,50))
+            self.machines.append(str(i+1))
 
 if __name__ == "__main__":
     
-    try:
-        os.mkdir(STATUS_PATH)
-    except FileExistsError as e:
-        pass
-
-    for st in ['none','wash','dry','both']:
-        with open(STATUS_PATH+'/'+st,'w') as f:
-            f.write(st)
-
-    floor = 0
-
-    if (len(sys.argv) > 1):
-        floor = sys.argv[1]
-    
-    port = 5000+int(floor)
+    base_port = 5000
     if (len(sys.argv) > 2):
-        port = int(sys.argv[2])
+        base_port = int(sys.argv[2])
 
-    print(floor)
-    print(port)
-
-    watch_status(floor,port)
+    w = SocketReader(4,base_port)
+    w.run()
 
