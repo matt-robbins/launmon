@@ -7,6 +7,7 @@ import functools
 import os
 import sys
 import db
+from subprocess import Popen
 
 UDP_IP = "0.0.0.0"
 
@@ -90,6 +91,11 @@ class SocketReader:
         except FileExistsError as e:
             pass
         self.db.addEvent(machine,status,datetime.datetime.utcnow())
+
+        hook_path = os.getenv("LAUNMON_NOTIF_HOOK","./notifyhook.sh")
+        cmd = "%s & disown" % hook_path
+        proc = Popen([hook_path], shell=True,
+             stdin=None, stdout=None, stderr=None, close_fds=True)
 
     def __init__(self, nlocations, base_port):
         
