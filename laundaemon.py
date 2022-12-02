@@ -92,10 +92,10 @@ class SocketReader:
             pass
         self.db.addEvent(machine,status,datetime.datetime.utcnow())
 
-        hook_path = os.getenv("LAUNMON_NOTIF_HOOK","./notifyhook.sh")
-        cmd = "%s & disown" % hook_path
-        proc = Popen([hook_path], shell=True,
-             stdin=None, stdout=None, stderr=None, close_fds=True)
+        if (status == 'none'):
+            hook_path = os.getenv("LAUNMON_NOTIF_HOOK","./notifyhook.sh")
+            proc = Popen([hook_path], shell=True,
+                stdin=None, stdout=None, stderr=None, close_fds=True)
 
     def __init__(self, nlocations, base_port):
         
