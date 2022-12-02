@@ -21,17 +21,16 @@ def status_json():
     status = {'1':'???','2':'???','3':'???','4':'???'}
     statusd = db.getLatest()
     d = dict(zip([s[0] for s in statusd],[s[1:] for s in statusd]))
-    print(json.dumps(d))
     return json.dumps(d)
 
-    for floor in ['1','2','3','4']:
-        try:
-            with open(const.STATUS_PATH+'/'+floor,'r') as f:
-                status[floor] = f.read()
-        except Exception as e:
-            status[floor] = 'unknown'
+    # for floor in ['1','2','3','4']:
+    #     try:
+    #         with open(const.STATUS_PATH+'/'+floor,'r') as f:
+    #             status[floor] = f.read()
+    #     except Exception as e:
+    #         status[floor] = 'unknown'
 
-    return json.dumps(status)
+    # return json.dumps(status)
 
 @app.route("/wash")
 def washing():
