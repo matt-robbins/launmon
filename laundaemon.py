@@ -67,7 +67,11 @@ class SocketReader:
             for s in readable:
                 data, addr = s.recvfrom(1024); port = s.getsockname()[1]
                 ix = self.ports.index(port)
-                sanitized = self.sanitize_data(data)
+                try:
+                    sanitized = self.sanitize_data(data)
+                except ValueError:
+                    print("bad value %s" % data)
+                    continue
                 machine = self.machines[ix]
 
                 self.db.addCurrentReading(machine,sanitized,datetime.datetime.utcnow())
