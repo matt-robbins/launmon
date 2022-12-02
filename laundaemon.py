@@ -70,7 +70,7 @@ class SocketReader:
                 try:
                     sanitized = self.sanitize_data(data)
                 except ValueError:
-                    print("bad value %s" % data)
+                    print("bad value %s from %s" % (data, addr))
                     continue
                 machine = self.machines[ix]
 
