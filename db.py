@@ -7,6 +7,7 @@ class LaundryDb:
         self.path = path
         self.create("CREATE TABLE IF NOT EXISTS events (location TEXT, status TEXT, time TIMESTAMP)")
         self.create("CREATE TABLE IF NOT EXISTS rawcurrent (location TEXT, current REAL, time TIMESTAMP)")
+        self.create("CREATE TABLE IF NOT EXISTS locations (location TEXT, nickname TEXT, tzoffset INT)")
 
     def insert(self,query, args):
         with closing(sqlite3.connect(self.path)) as con:
@@ -18,11 +19,11 @@ class LaundryDb:
             with closing(con.cursor()) as cur:
                 cur.execute(query)
             con.commit()
-    def fetch(self,query):
+    def fetch(self,query,args=()):
         ret = None
         with closing(sqlite3.connect(self.path)) as con:
             with closing(con.cursor()) as cur:
-                ret = cur.execute(query).fetchall()
+                ret = cur.execute(query,args).fetchall()
         return ret
 
     def addEvent(self,location,status,time=datetime.datetime.utcnow()):
@@ -43,6 +44,34 @@ class LaundryDb:
                 ORDER BY e.location"""
         return self.fetch(sqlt)
 
+    def getHist(self, location="1",weekday=0):
+
+        sqlt = """SELECT 
+            cast(strftime('%H',datetime(time, :tzoff || ' hour')) as INT) hour, 
+            count(*)/12. perhour 
+            FROM events 
+            WHERE time > datetime('now','-28 day') 
+            AND cast(strftime('%w',datetime(time, :tzoff || ' hour')) as INT) = :wkday 
+            AND location=:loc
+            GROUP BY hour;"""
+        
+        d = self.fetch(sqlt,{'tzoff':"-5",'wkday':weekday,'loc':location})
+        
+        b = [0 for ix in range(24)]
+        for bin,val in d: 
+            b[bin] = val
+        
+        return b
+
+
+
+    def getEvents(self, location="all", hours=-24):
+        if (location=="all" or location is None):
+            return self.fetch("SELECT time,status FROM events WHERE time > datetime('now', ? || ' hours')", (-hours,))
+        else:
+            return self.fetch("SELECT time,status FROM events WHERE time > datetime('now', ? || ' hours') AND location = ?;", (-hours, location))
+
+
 if (__name__ == "__main__"):
     db = LaundryDb()
 
@@ -51,5 +80,8 @@ if (__name__ == "__main__"):
     db.addEvent('4','none',datetime.datetime.utcnow())
 
     print(db.getLatest())
+    print(db.getHist(None))
+
+    print(db.getEvents('2',96))
 
     pass

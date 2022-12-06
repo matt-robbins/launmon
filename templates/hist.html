@@ -1,0 +1,40 @@
+<html>
+   <head>
+    <style>
+
+html, body {
+    height: 100%;
+}
+body {
+  display: flex;
+  align-items: stretch;
+}
+#root {
+  width: 100%
+}
+.container {
+    display: flex;
+    align-items: flex-end;
+    height:50%;
+    width:100%;
+    justify-content: center;
+    background-color: rgb(241, 241, 241);
+}
+.hour {
+    flex: 1 1 40px;
+    background-color:aqua;
+    border-radius: 3px;
+    padding: 1px;
+    margin: 1px;
+}
+    </style>
+   </head>
+   <body>
+    <div class="container">
+        {%for i in range(0, 24)%}
+            <div class="hour" id="h{{ i }}" style="height:{{ hist[i]*100 }}%" title="{{ i }}h"></div>
+        {%endfor%}
+    </div>
+
+   </body>
+</html>

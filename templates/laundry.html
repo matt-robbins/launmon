@@ -3,38 +3,16 @@
 {% block content %}
     <h1>{% block title %} 375 Lincoln Place Laundry Monitor {% endblock %}</h1>
 	    
-    <div id="4f" class="card">
-        <div class="card-body">
-            <h5 class="card-title">Fourth Floor</h5>
-            <p id="t4" class="card-subtitle">sometime</p>
-            <p class="card-text" id="dryer4" style="background-color:gray;">"?"</p>
-            <p class="card-text" id="washer4" style="background-color:gray;">"?"</p>
+    {%for i in range(0, 4)%}
+        <div class="card" id="{{ 4-i }}f">
+            <div class="card-body">
+                <h5 class="card-title"><a href="histogram?location={{ 4-i }}&weekday={{ weekday }}">{{ names[i] }}</a></h5>
+                <p id="t{{ 4-i }}" class="card-subtitle">sometime</p>
+                <p class="card-text" id="dryer{{ 4-i }}" style="background-color:gray; padding-left:10px;">"?"</p>
+                <p class="card-text" id="washer{{ 4-i }}" style="background-color:gray; padding-left:10px;">"?"</p>
+            </div>
         </div>
-    </div>
-    <div id="3f" class="card">
-        <div class="card-body">
-            <h5 class="card-title">Third Floor</h5>
-            <p id="t3" class="card-subtitle">sometime</p>
-            <p id="dryer3" style="background-color:gray;">"?"</p>
-            <p id="washer3" style="background-color:gray;">"?"</p>
-        </div>
-    </div>
-    <div id="2f" class="card">
-        <div class="card-body">
-            <h5 class="card-title">Second Floor</h5>
-            <p id="t2" class="card-subtitle">sometime</p>
-            <p id="dryer2" style="background-color:gray;">"?"</p>
-            <p id="washer2" style="background-color:gray;">"?"</p>
-        </div>
-    </div>
-    <div id="1f" class="card">
-        <div class="card-body">
-            <h5 class="card-title">Basement</h5>
-            <p id="t1" class="card-subtitle">sometime</p>
-            <p id="dryer1" style="background-color:gray;">"?"</p>
-            <p id="washer1" style="background-color:gray;">"?"</p>
-        </div>
-    </div>
+    {%endfor%}
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script>
