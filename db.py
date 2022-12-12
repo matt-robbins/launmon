@@ -7,7 +7,8 @@ class LaundryDb:
         self.path = path
         self.create("CREATE TABLE IF NOT EXISTS events (location TEXT, status TEXT, time TIMESTAMP)")
         self.create("CREATE TABLE IF NOT EXISTS rawcurrent (location TEXT, current REAL, time TIMESTAMP)")
-        self.create("CREATE TABLE IF NOT EXISTS locations (location TEXT, nickname TEXT, tzoffset INT)")
+        self.create("CREATE TABLE IF NOT EXISTS locations (location TEXT UNIQUE, nickname TEXT, tzoffset INT, lastseen TIMESTAMP)")
+        self.create("CREATE TABLE IF NOT EXISTS calibration (location TEXT UNIQUE, calibration REAL)")
 
     def insert(self,query, args):
         with closing(sqlite3.connect(self.path)) as con:
@@ -33,7 +34,8 @@ class LaundryDb:
     def addCurrentReading(self,location,value,time=datetime.datetime.utcnow()):
         sqlt = """INSERT INTO rawcurrent VALUES (?, ?, ?);"""
         self.insert(sqlt,(location,value,time))
-
+        sqlt = "INSERT INTO locations(location,lastseen) VALUES (:loc,:ts) ON CONFLICT(location) DO UPDATE SET lastseen=:ts;"
+        self.insert(sqlt,{'loc':location,'ts':time})
     def getLatest(self):
         sqlt = """SELECT e.location, e.status, e.time FROM events e
                 INNER JOIN (
@@ -43,6 +45,20 @@ class LaundryDb:
                 ) em on e.location = em.location AND e.time = em.MaxDate
                 ORDER BY e.location"""
         return self.fetch(sqlt)
+
+    def getLastSeen(self):
+        sqlt = """SELECT c.location, c.time FROM rawcurrent c
+                INNER JOIN (
+                    SELECT location, max(time) as MaxDate 
+                    FROM rawcurrent 
+                    GROUP BY location
+                ) cm on c.location = cm.location AND c.time = cm.MaxDate
+                ORDER BY c.location"""
+        return self.fetch(sqlt)
+
+    def getCal(self, location="1"):
+        sqlt = "SELECT calibration FROM calibration WHERE location = ?;"
+        return self.fetch(sqlt,(location,))
 
     def getHist(self, location="1",weekday=0):
 

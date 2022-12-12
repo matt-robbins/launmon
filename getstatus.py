@@ -17,7 +17,7 @@ def compare(ha,hb):
     return sum
 
 def hist(x):
-    h = numpy.histogram(x,bins=400,range=(0,4000))[0]
+    h = numpy.histogram(x,bins=200,range=(0,2000))[0]
     h = h/numpy.sum(h)
     return h
 

@@ -15,14 +15,14 @@ STATUS_PATH = '/tmp/laundrystatus'
 
 class SignalProcessor:
 
-    def __init__(self,N,oN):
-        self.N = N; self.oN = oN
+    def __init__(self,N,oN,cal=1.0):
+        self.N = N; self.oN = oN; self.cal = cal
         self.x = np.zeros((N,1)); self.ix = 0; self.oix = -1
         self.state = 'none'
         self.old_state = '???'
 
-    def process_sample(self,sample):
-        self.x[self.ix] = sample
+    def process_sample(self,sample,only_diff=True):
+        self.x[self.ix] = sample*self.cal
         # circular buffer index update
         self.ix = self.ix + 1 if (self.ix < self.N-1) else 0
         self.oix = self.oix + 1 if (self.oix < self.oN-1) else 0
@@ -30,7 +30,7 @@ class SignalProcessor:
             return None
 
         self.state = self.buffer_classify(self.x)
-        if (self.state == self.old_state):
+        if (only_diff and (self.state == self.old_state)):
             return None
         self.old_state = self.state
 
@@ -108,6 +108,15 @@ class SocketReader:
             with open(STATUS_PATH+'/'+st,'w') as f:
                 f.write(st)
 
+        cals = []
+        try:
+            with open("calibration.txt","r") as f:
+                for l in f.readlines():
+                    cals.append(float(l))
+        except FileNotFoundError as e:
+            print("no calibration file -- setting all factors to 1.0")
+            cals = [1., 1., 1., 1.]
+
         self.db = db.LaundryDb()
 
         self.sockets = []
@@ -120,7 +129,7 @@ class SocketReader:
             sock.bind((UDP_IP, port))
             self.ports.append(port)
             self.sockets.append(sock)
-            self.processors.append(SignalProcessor(100,50))
+            self.processors.append(SignalProcessor(100,50, cals[i]))
             self.machines.append(str(i+1))
 
 if __name__ == "__main__":
