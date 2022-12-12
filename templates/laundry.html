@@ -19,7 +19,7 @@
         $(function() {
             AVAIL = {"yes": {"color": "green", "text": "Available" },
                     "no": {"color": "red", "text": "In Use"},
-                    "?": {"color": "gray", "text": "No Data"}}
+                    "?": {"color": "gray", "text": "Offline"}}
 
             function setMachine(machine,avail,date){
                 $(machine).css("background-color",AVAIL[avail].color).text(AVAIL[avail].text)
@@ -29,14 +29,15 @@
                 $.getJSON($SCRIPT_ROOT + '/status-json', {}, function(data) {
                     for (floor in data) {
                         d = new Date(data[floor][1]+"Z")
+                        d2 = new Date(data[floor][2]+"Z")
                         
                         if (!(["none","wash","dry","both"].includes(data[floor][0]))){
                             setMachine("#washer"+floor,"?",d)
                             setMachine("#dryer"+floor,"?",d)
                             continue
                         }
-                        if (Date.now()-d > 86400*1000) {
-                            $("#t"+floor).text("Last Updated "+d.toLocaleDateString())
+                        if (Date.now()-d > 60*1000) {
+                            $("#t"+floor).text("Last Seen "+d.toLocaleDateString())
                             setMachine("#washer"+floor,"?",d)
                             setMachine("#dryer"+floor,"?",d)
                             continue

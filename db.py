@@ -36,24 +36,20 @@ class LaundryDb:
         self.insert(sqlt,(location,value,time))
         sqlt = "INSERT INTO locations(location,lastseen) VALUES (:loc,:ts) ON CONFLICT(location) DO UPDATE SET lastseen=:ts;"
         self.insert(sqlt,{'loc':location,'ts':time})
+
     def getLatest(self):
-        sqlt = """SELECT e.location, e.status, e.time FROM events e
+        sqlt = """SELECT e.location, e.status, e.time, l.lastseen FROM events e
                 INNER JOIN (
                     SELECT location, max(time) as MaxDate 
                     FROM events 
                     GROUP BY location
                 ) em on e.location = em.location AND e.time = em.MaxDate
+                JOIN locations l ON l.location = e.location
                 ORDER BY e.location"""
         return self.fetch(sqlt)
 
     def getLastSeen(self):
-        sqlt = """SELECT c.location, c.time FROM rawcurrent c
-                INNER JOIN (
-                    SELECT location, max(time) as MaxDate 
-                    FROM rawcurrent 
-                    GROUP BY location
-                ) cm on c.location = cm.location AND c.time = cm.MaxDate
-                ORDER BY c.location"""
+        sqlt = """SELECT location, lastseen FROM locations;"""
         return self.fetch(sqlt)
 
     def getCal(self, location="1"):
