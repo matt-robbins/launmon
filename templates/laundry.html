@@ -36,7 +36,7 @@
                             setMachine("#dryer"+floor,"?",d)
                             continue
                         }
-                        if (Date.now()-d > 60*1000) {
+                        if (Date.now()-d2 > 60*1000) {
                             $("#t"+floor).text("Last Seen "+d.toLocaleDateString())
                             setMachine("#washer"+floor,"?",d)
                             setMachine("#dryer"+floor,"?",d)
