@@ -48,6 +48,17 @@ def events_json():
     ev = db.getEvents(location,hours)
     return json.dumps(ev)
 
+@app.route("/rawcurrent-json")
+def current_json():
+    location = request.args.get('location', "3", type=str)
+    minutes = request.args.get('minutes',-60, type=int)
+    print(location)
+    print(minutes)
+    res = db.getCurrent(location,minutes)
+
+    dict = {"time": [c[2] for c in res],"current": [c[1] for c in res]}
+    return json.dumps(dict)
+
 @app.route("/wash")
 def washing():
     s = getstatus.getstatus()

@@ -32,6 +32,11 @@ class SignalProcessor:
         self.state = self.buffer_classify(self.x)
         if (only_diff and (self.state == self.old_state)):
             return None
+
+        if (self.old_state == '???'):
+            self.old_state = self.state
+            return None
+            
         self.old_state = self.state
 
         return self.state

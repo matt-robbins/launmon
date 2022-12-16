@@ -75,13 +75,14 @@ class LaundryDb:
         
         return b
 
-
-
     def getEvents(self, location="all", hours=-24):
         if (location=="all" or location is None):
             return self.fetch("SELECT time,status FROM events WHERE time > datetime('now', ? || ' hours')", (-hours,))
         else:
             return self.fetch("SELECT time,status FROM events WHERE time > datetime('now', ? || ' hours') AND location = ?;", (-hours, location))
+
+    def getCurrent(self, location="1", minutes=-60):
+        return self.fetch("SELECT location,current,strftime('%H:%M:%S',time) FROM rawcurrent WHERE time > datetime((SELECT max(time) FROM rawcurrent), ? || ' minutes') AND location = ?", (-minutes, location))
 
 
 if (__name__ == "__main__"):
