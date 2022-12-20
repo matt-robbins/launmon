@@ -2,36 +2,50 @@
    <head>
     <style>
 
-html, body {
-    height: 100%;
-}
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-#root {
-  width: 100%
-}
-.container {
-    display: flex;
-    align-items: flex-end;
-    height:50%;
-    width:100%;
-    justify-content: center;
-    background-color: rgb(241, 241, 241);
-}
+    html, body {
+        height: 100%;
+    }
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #root {
+        width: 100%
+    }
+    .container {
+        display: flex;
+        align-items: flex-end;
+        flex: 1 1 40px;
+        justify-content: center;
+        background-color: rgb(241, 241, 241);
+    }
 
-.menu {
-    display: flex;
-}
-.hour {
-    flex: 1 1 40px;
-    background-color:aqua;
-    border-radius: 3px;
-    padding: 1px;
-    margin: 1px;
-}
+    .menu {
+        display: flex;
+    }
+    .hour {
+        flex: 1 1 40px;
+        background-color:aqua;
+        border-radius: 3px;
+        padding: 1px;
+        margin: 1px;
+    }
+
+    .history {
+        height:20px;
+        width:100%;
+        background-color: white;
+        padding:2px;
+        position:relative;
+    }
+    .history_item {
+        position: absolute;
+        background-color: green;
+    }
+    .history_item:hover {
+        background-color: lightgreen;
+    }
     </style>
 
     <script src="https://cdn.plot.ly/plotly-2.16.1.min.js"></script>
@@ -60,11 +74,29 @@ body {
             <div class="hour" id="h{{ i }}" style="height:{{ hist[i]*100 }}%" title="{{ i }}h"></div>
         {%endfor%}
     </div>
+    <div id="history" class="history">
+
+    </div>
     <div id="graph">
 
     </div>
 
     <script>
+
+        function ajax(url, fun) {
+            var request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.onload = function() {
+                if (request.status >= 200 && request.status < 400) {
+                    // Success!
+                    var data = JSON.parse(request.responseText);
+                    fun(data)
+                } else {
+                    // We reached our target server, but it returned an error
+                }
+            };
+            request.send();
+        }
 
         var layout = {
             title: 'Current Draw Over Time',
@@ -78,34 +110,61 @@ body {
             },
         };
         plot = document.getElementById('graph');
-        var request = new XMLHttpRequest();
-        request.open('GET', '/rawcurrent-json?minutes=30&location='+{{ location }}, true);
-
-        request.onload = function() {
-        if (request.status >= 200 && request.status < 400) {
-            // Success!
-            var data = JSON.parse(request.responseText);
-            console.log(data)
-
-            Plotly.newPlot( plot, [{
-                x: data.time,
-                y: data.current }],
+        Plotly.newPlot( plot, [{
+                x: [],
+                y: [] }],
                 layout );
 
-        } else {
-            // We reached our target server, but it returned an error
+        var hours = 48
 
+        function update() {
+
+            ajax('/rawcurrent-json?minutes=30&location='+{{ location }}, function(data) {
+                 Plotly.update(plot, {'x': [data.time], 'y': [data.current]})
+            })
         }
-        };
 
-        request.onerror = function() {
-        // There was a connection error of some sort
-        };
+        update()
 
-        request.send();
+        setInterval(function() {
+            update()
+        }, 2000);
 
+        ajax('/cycles-json?hours='+hours+'&location='+{{ location }}, function(data) {
 
-        
+            var history = document.getElementById("history")
+            console.log(data)
+            var scale = hours*36000;
+
+            var colors = {'none':'white','wash':'yellow','dry':'green','both':'red'}
+            for (var i = 0; i < data.start.length-1; i++){
+                var ev = document.createElement('div');
+                history.append(ev);
+
+                console.log(data.start[i])
+                console.log(data.end[i])
+                ds = new Date(data.start[i]+"Z").getTime()
+                de = new Date(data.end[i]+"Z").getTime()
+                dn = new Date().getTime()
+
+                console.log((dn-ds)/1000)
+
+                ev.id = "event"+i;
+                ev.classList = ['history_item']
+                ev.style.position = "absolute"
+                ev.style.left = 100-((dn-de)/scale)+'%';
+                ev.style.width = ((de-ds)/scale)+'%';
+                ev.style.height = '1em';
+                ev.style.top = '0px';
+                ev.setAttribute('data-start', data.start[i])
+                ev.dataset.end=data.end[i]
+
+                ev.onclick = function(ev) {
+                    alert(ev.getAttribute('data-start'))
+                }
+            }
+            })
+
     </script>
 
    </body>

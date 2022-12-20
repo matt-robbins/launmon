@@ -46,7 +46,16 @@ def events_json():
     location = request.args.get('location', "all", type=str)
     hours = request.args.get('hours',24, type=int)
     ev = db.getEvents(location,hours)
-    return json.dumps(ev)
+    dict = {"time": [e[0] for e in ev],"status": [e[1] for e in ev]}
+    return json.dumps(dict)
+
+@app.route("/cycles-json")
+def cycles_json():
+    location = request.args.get('location', "all", type=str)
+    hours = request.args.get('hours',24, type=int)
+    ev = db.getWashCycles(location,hours)
+    dict = {'start':[e[0] for e in ev],"end": [e[1] for e in ev]}
+    return json.dumps(dict)
 
 @app.route("/rawcurrent-json")
 def current_json():
@@ -58,6 +67,10 @@ def current_json():
 
     dict = {"time": [c[2] for c in res],"current": [c[1] for c in res]}
     return json.dumps(dict)
+
+@app.route("/current-graph")
+def current_graph():
+    return None
 
 @app.route("/wash")
 def washing():

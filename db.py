@@ -79,7 +79,38 @@ class LaundryDb:
         if (location=="all" or location is None):
             return self.fetch("SELECT time,status FROM events WHERE time > datetime('now', ? || ' hours')", (-hours,))
         else:
-            return self.fetch("SELECT time,status FROM events WHERE time > datetime('now', ? || ' hours') AND location = ?;", (-hours, location))
+            return self.fetch("SELECT time,status FROM events WHERE time > datetime((SELECT max(time) FROM events), ? || ' hours') AND location = ?;", (-hours, location))
+
+    def getWashCycles(self, location='1',hours=-24):
+        sqlt = """
+            SELECT time,endtime FROM (
+                SELECT time,lead(time) OVER (ORDER BY time) endtime,cstart FROM (
+                    SELECT time,
+                        (lag(status) OVER (ORDER BY time) || status) 
+                            IN ('nonewash','noneboth','dryboth','drywash') cstart, 
+                        (lag(status) OVER (ORDER BY time) || status) 
+                            IN ('washnone','bothnone','bothdry','washdry') cend
+                    FROM events WHERE location = ? AND time > datetime('now', ? || ' hours')) 
+                WHERE cstart > 0 OR cend > 0)
+            WHERE cstart > 0
+        """
+        return self.fetch(sqlt,(location, -hours))
+
+    def getDryCycles(self, location='1',hours=-24):
+        sqlt = """
+            SELECT time,endtime FROM (
+                SELECT time,lead(time) OVER (ORDER BY time) endtime,cstart FROM (
+                    SELECT time,
+                        (lag(status) OVER (ORDER BY time) || status) 
+                            IN ('nonedry','noneboth','washboth','washdry') cstart, 
+                        (lag(status) OVER (ORDER BY time) || status) 
+                            IN ('drynone','bothnone','bothwash','drywash') cend
+                    FROM events WHERE location = ? AND time > datetime('now', ? || ' hours')) 
+                WHERE cstart > 0 OR cend > 0)
+            WHERE cstart > 0
+        """
+        return self.fetch(sqlt,(location, -hours))
+
 
     def getCurrent(self, location="1", minutes=-60):
         return self.fetch("SELECT location,current,strftime('%H:%M:%S',time) FROM rawcurrent WHERE time > datetime((SELECT max(time) FROM rawcurrent), ? || ' minutes') AND location = ?", (-minutes, location))
@@ -88,13 +119,6 @@ class LaundryDb:
 if (__name__ == "__main__"):
     db = LaundryDb()
 
-    db.addEvent('4','dry',datetime.datetime.fromtimestamp(0))
-    db.addEvent('2','both',datetime.datetime.fromtimestamp(0))
-    db.addEvent('4','none',datetime.datetime.utcnow())
-
-    print(db.getLatest())
-    print(db.getHist(None))
-
-    print(db.getEvents('2',96))
+    print(db.getWashCycles('4',48))
 
     pass
