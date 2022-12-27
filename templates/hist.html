@@ -33,10 +33,10 @@
     }
 
     .history {
-        flex: 1 1 20px;
-        height:20px;
+        flex: 0 0 30px;
+        /*height:20px;*/
         width:100%;
-        background-color: white;
+        background-color: oldlace;
         padding:2px;
         position:relative;
     }
@@ -75,23 +75,22 @@
             <div class="hour" id="h{{ i }}" style="height:{{ hist[i]*100 }}%" title="{{ i }}h"></div>
         {%endfor%}
     </div>
-    <div id="history" class="history">
-
-    </div>
+    <div id="dry_history" class="history"></div>
+    <div id="wash_history" class="history"></div>
     <div id="graph">
 
     </div>
 
     <script>
 
-        function ajax(url, fun) {
+        function ajax(url, fun, parm=null) {
             var request = new XMLHttpRequest();
             request.open('GET', url, true);
             request.onload = function() {
                 if (request.status >= 200 && request.status < 400) {
                     // Success!
                     var data = JSON.parse(request.responseText);
-                    fun(data)
+                    fun(data, parm)
                 } else {
                     // We reached our target server, but it returned an error
                 }
@@ -131,10 +130,11 @@
             //update()
         }, 2000);
 
-        ajax('/cycles-json?hours='+hours+'&location='+{{ location }}, function(data) {
-
-            var history = document.getElementById("history")
+        function draw_history_items(data,elem,loc) {
+            var history = elem
             console.log(data)
+            console.log(elem)
+            console.log(loc)
             var scale = hours*36000;
 
             var colors = {'none':'white','wash':'yellow','dry':'green','both':'red'}
@@ -155,7 +155,7 @@
                 ev.style.position = "absolute"
                 ev.style.left = 100-((dn-de)/scale)+'%';
                 ev.style.width = ((de-ds)/scale)+'%';
-                ev.style.height = '100px';
+                ev.style.height = '90%';
                 ev.style.top = '0px';
                 ev.setAttribute('data-start', data.start[i])
                 ev.setAttribute('data-end', data.end[i])
@@ -171,7 +171,10 @@
                     })
                 })
             }
-            })
+        }
+
+        ajax('/cycles-json?type=dry&hours='+hours+'&location='+{{ location }}, draw_history_items, document.getElementById("dry_history"), "{{ location }}")
+        ajax('/cycles-json?type=wash&hours='+hours+'&location='+{{ location }}, draw_history_items, document.getElementById("wash_history"), "{{ location }}")
 
     </script>
 
