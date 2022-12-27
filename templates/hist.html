@@ -33,6 +33,7 @@
     }
 
     .history {
+        flex: 1 1 20px;
         height:20px;
         width:100%;
         background-color: white;
@@ -115,11 +116,11 @@
                 y: [] }],
                 layout );
 
-        var hours = 48
+        var hours = 24
 
         function update() {
 
-            ajax('/rawcurrent-json?minutes=30&location='+{{ location }}, function(data) {
+            ajax('/rawcurrent-json?minutes=60&location='+{{ location }}, function(data) {
                  Plotly.update(plot, {'x': [data.time], 'y': [data.current]})
             })
         }
@@ -127,7 +128,7 @@
         update()
 
         setInterval(function() {
-            update()
+            //update()
         }, 2000);
 
         ajax('/cycles-json?hours='+hours+'&location='+{{ location }}, function(data) {
@@ -154,14 +155,21 @@
                 ev.style.position = "absolute"
                 ev.style.left = 100-((dn-de)/scale)+'%';
                 ev.style.width = ((de-ds)/scale)+'%';
-                ev.style.height = '1em';
+                ev.style.height = '100px';
                 ev.style.top = '0px';
                 ev.setAttribute('data-start', data.start[i])
+                ev.setAttribute('data-end', data.end[i])
                 ev.dataset.end=data.end[i]
 
-                ev.onclick = function(ev) {
-                    alert(ev.getAttribute('data-start'))
-                }
+                console.log(data.start[i])
+                console.log(data.end[i])
+                ev.addEventListener('click', function(ev) {
+                    console.log(ev)
+                    //console.log(this.getAttribute('data-start'))
+                    ajax('/rawcurrent-range-json?location='+{{ location }}+'&start='+this.getAttribute('data-start')+'&end='+this.getAttribute('data-end'), function(data) {
+                        Plotly.update(plot, {'x': [data.time], 'y': [data.current]})
+                    })
+                })
             }
             })
 

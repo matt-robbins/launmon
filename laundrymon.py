@@ -53,7 +53,7 @@ def events_json():
 def cycles_json():
     location = request.args.get('location', "all", type=str)
     hours = request.args.get('hours',24, type=int)
-    ev = db.getWashCycles(location,hours)
+    ev = db.getDryCycles(location,hours)
     dict = {'start':[e[0] for e in ev],"end": [e[1] for e in ev]}
     return json.dumps(dict)
 
@@ -64,6 +64,16 @@ def current_json():
     print(location)
     print(minutes)
     res = db.getCurrent(location,minutes)
+
+    dict = {"time": [c[2] for c in res],"current": [c[1] for c in res]}
+    return json.dumps(dict)
+
+@app.route("/rawcurrent-range-json")
+def current_range_json():
+    location = request.args.get('location', "3", type=str)
+    start = request.args.get('start',"", type=str)
+    end = request.args.get('end',"", type=str)
+    res = db.getCurrentRange(location,start,end)
 
     dict = {"time": [c[2] for c in res],"current": [c[1] for c in res]}
     return json.dumps(dict)

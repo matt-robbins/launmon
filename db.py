@@ -115,6 +115,16 @@ class LaundryDb:
     def getCurrent(self, location="1", minutes=-60):
         return self.fetch("SELECT location,current,strftime('%H:%M:%S',time) FROM rawcurrent WHERE time > datetime((SELECT max(time) FROM rawcurrent), ? || ' minutes') AND location = ?", (-minutes, location))
 
+    def getCurrentRange(self, location="1", start="",end=""):
+        sqlt = """
+        SELECT location,current,strftime('%H:%M:%S',time) 
+            FROM rawcurrent 
+            WHERE time > ?
+            AND time < ?
+            AND location = ?
+        """
+        return self.fetch(sqlt, (start,end,location))
+
 
 if (__name__ == "__main__"):
     db = LaundryDb()
