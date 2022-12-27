@@ -53,7 +53,11 @@ def events_json():
 def cycles_json():
     location = request.args.get('location', "all", type=str)
     hours = request.args.get('hours',24, type=int)
-    ev = db.getDryCycles(location,hours)
+    type = request.args.get('type', 'dry',type=str)
+    if (type == "wash"):
+        ev = db.getWashCycles(location,hours)
+    else:
+        ev = db.getDryCycles(location,hours)
     dict = {'start':[e[0] for e in ev],"end": [e[1] for e in ev]}
     return json.dumps(dict)
 
