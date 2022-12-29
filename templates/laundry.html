@@ -32,7 +32,7 @@
   was_running = {}
   $(function () {
     function update() {
-      was_running = running
+      Object.assign(was_running,running);
       fetch(`${$SCRIPT_ROOT}/v2/status-json`)
         .then((resp) => resp.json())
         .then((status) => {
@@ -42,8 +42,9 @@
             const lastUpdated = new Date(`${floorStatus.time}Z`);
             
             running[floorStatus.floor] = floorStatus.wash || floorStatus.dry
+            console.log(running,was_running)
             if (!running[floorStatus.floor] && was_running[floorStatus.floor]){
-              alert(floor+' done!')
+              alert('Done!')
             }
 
             if (Date.now() - lastSeen > 60 * 1000) {
