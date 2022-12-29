@@ -36,6 +36,7 @@
           status.forEach((floorStatus) => {
             const floor = $(`#floor-${floorStatus.floor}`);
             const lastSeen = new Date(`${floorStatus.last_seen}Z`);
+            const lastUpdated = new Date(`${floorStatus.time}Z`);
             if (Date.now() - lastSeen > 60 * 1000) {
               floor
                 .find("[data-js-attr='floor-updated-at']")
@@ -53,7 +54,7 @@
             } else {
               floor
                 .find("[data-js-attr='floor-updated-at']")
-                .text(`Last updated: ${lastSeen.toLocaleTimeString()}`);
+                .text(`Last updated: ${lastUpdated.toLocaleTimeString()}`);
               floor
                 .find("svg.washer")
                 .toggleClass("running", floorStatus.wash === true)
