@@ -28,8 +28,11 @@
 </div>
 
 <script>
+  running = {}
+  was_running = {}
   $(function () {
     function update() {
+      was_running = running
       fetch(`${$SCRIPT_ROOT}/v2/status-json`)
         .then((resp) => resp.json())
         .then((status) => {
@@ -37,6 +40,12 @@
             const floor = $(`#floor-${floorStatus.floor}`);
             const lastSeen = new Date(`${floorStatus.last_seen}Z`);
             const lastUpdated = new Date(`${floorStatus.time}Z`);
+            
+            running[floorStatus.floor] = floorStatus.wash || floorStatus.dry
+            if (!running[floorStatus.floor] && was_running[floorStatus.floor]){
+              alert(floor+' done!')
+            }
+
             if (Date.now() - lastSeen > 60 * 1000) {
               floor
                 .find("[data-js-attr='floor-updated-at']")
