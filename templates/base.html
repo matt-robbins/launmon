@@ -1,43 +1,146 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
 
+    <style>
+      :root {
+        --color-offline: lightgrey;
+        --color-running: #d5352b;
+        --color-available: #65b6f0;
+      }
+
+      .machine {
+        stroke: black;
+        fill: black;
+        background-color: var(--color-offline);
+        stroke-width: 0;
+        border-radius: 8px;
+        width: 128px;
+        height: 128px;
+      }
+
+      @media (min-width: 992px) {
+        .machine {
+          width: 165px;
+          height: 165px;
+        }
+      }
+
+      .machine.running {
+        background-color: var(--color-running);
+      }
+      .machine.available {
+        background-color: var(--color-available);
+      }
+
+      .washer.running .washer-center {
+        animation: spin 4s infinite linear;
+        transform-origin: 50% 50%;
+        transform-box: fill-box;
+      }
+
+      @keyframes spin {
+        100% {
+          transform: rotate(359deg);
+        }
+      }
+
+      .dryer.running {
+        transform-box: fill-box;
+        transform-origin: 50% 50%;
+        animation: dance 2s infinite ease-in-out;
+      }
+
+      @keyframes dance {
+        30% {
+          transform: rotate(3deg);
+        }
+        60% {
+          transform: rotate(-3deg);
+        }
+        90%: {
+          transform: rotate(0deg);
+        }
+      }
+
+      .machine .label {
+        fill: black;
+        font-size: 36px;
+        text-shadow: 0px 0px 3px white;
+        text-anchor: middle;
+      }
+
+      .machine .label-offset {
+        stroke-width: 0.11em;
+        stroke: var(--color-offline);
+      }
+      .machine.running .label-offset {
+        stroke: var(--color-running);
+      }
+      .machine.available .label-offset {
+        stroke: var(--color-available);
+      }
+    </style>
     <title>{% block title %} {% endblock %}</title>
   </head>
   <body>
     <nav class="navbar navbar-expand-md navbar-light bg-light">
-        <a class="navbar-brand" href="">Laundry</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-            <li class="nav-item active">
-                <a class="nav-link" href="#">About</a>
-            </li>
-            </ul>
-        </div>
+      <a class="navbar-brand" href="">Laundry</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item active">
+            <a class="nav-link" href="#">About</a>
+          </li>
+        </ul>
+      </div>
     </nav>
-
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+      integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+      integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+      integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+      crossorigin="anonymous"
+    ></script>
     <script>
       $SCRIPT_ROOT = {{ request.script_root|tojson }};
     </script>
 
-    <div class="container">
-      {% block content %} {% endblock %}
-    </div>
-    
+    {% block content %}{% endblock %}
   </body>
 </html>

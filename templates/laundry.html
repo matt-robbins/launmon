@@ -1,60 +1,80 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} {% block content %}
+<div class="container w-100">
+  <h1>{% block title %} 375 Lincoln Place Laundry Monitor {% endblock %}</h1>
 
-{% block content %}
-    <h1>{% block title %} 375 Lincoln Place Laundry Monitor {% endblock %}</h1>
-	    
-    {%for i in range(0, 4)%}
-        <div class="card" id="{{ 4-i }}f">
-            <div class="card-body">
-                <h5 class="card-title"><a href="histogram?location={{ 4-i }}&weekday={{ weekday }}">{{ names[i] }}</a></h5>
-                <p id="t{{ 4-i }}" class="card-subtitle">sometime</p>
-                <p class="card-text" id="dryer{{ 4-i }}" style="background-color:gray; padding-left:10px;">"?"</p>
-                <p class="card-text" id="washer{{ 4-i }}" style="background-color:gray; padding-left:10px;">"?"</p>
-            </div>
+  <div class="row">
+    {% for floor in names %}
+    <div class="col-sm card m-1 container">
+      <div class="class-body" id="floor-{{loop.revindex}}">
+        <h5 class="card-title mt-1">{{ floor }}</h5>
+        <h6
+          class="card-subtitle text-muted mb-2"
+          data-js-attr="floor-updated-at"
+        >
+          Never
+        </h6>
+        <div class="row mb-2 pl-2 text-center">
+          <div class="dryer-container col">{% include './svg/dryer.svg' %}</div>
         </div>
-    {%endfor%}
+        <div class="row pl-2 pb-2 text-center">
+          <div class="washer-container col">
+            {% include './svg/washer.svg' %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-    <script>
-        $(function() {
-            AVAIL = {"yes": {"color": "green", "text": "Available" },
-                    "no": {"color": "red", "text": "In Use"},
-                    "?": {"color": "gray", "text": "Offline"}}
-
-            function setMachine(machine,avail,date){
-                $(machine).css("background-color",AVAIL[avail].color).text(AVAIL[avail].text)
+<script>
+  $(function () {
+    function update() {
+      fetch(`${$SCRIPT_ROOT}/v2/status-json`)
+        .then((resp) => resp.json())
+        .then((status) => {
+          status.forEach((floorStatus) => {
+            const floor = $(`#floor-${floorStatus.floor}`);
+            const lastSeen = new Date(`${floorStatus.last_seen}Z`);
+            if (Date.now() - lastSeen > 60 * 1000) {
+              floor
+                .find("[data-js-attr='floor-updated-at']")
+                .text(`Last seen: ${lastSeen.toLocaleDateString()}`);
+              floor
+                .find("svg.washer")
+                .attr("class", "machine washer")
+                .find(".label")
+                .text("Offline");
+              floor
+                .find("svg.dryer")
+                .attr("class", "machine dryer")
+                .find(".label")
+                .text("Offline");
+            } else {
+              floor
+                .find("[data-js-attr='floor-updated-at']")
+                .text(`Last updated: ${lastSeen.toLocaleTimeString()}`);
+              floor
+                .find("svg.washer")
+                .toggleClass("running", floorStatus.wash === true)
+                .toggleClass("available", floorStatus.wash === false)
+                .find(".label")
+                .text(floorStatus.wash === true ? "Running" : "Available");
+              floor
+                .find("svg.dryer")
+                .toggleClass("running", floorStatus.dry === true)
+                .toggleClass("available", floorStatus.dry === false)
+                .find(".label")
+                .text(floorStatus.dry === true ? "Running" : "Available");
             }
-            
-            function update() {
-                $.getJSON($SCRIPT_ROOT + '/status-json', {}, function(data) {
-                    for (floor in data) {
-                        d = new Date(data[floor][1]+"Z")
-                        d2 = new Date(data[floor][2]+"Z")
-                        
-                        if (!(["none","wash","dry","both"].includes(data[floor][0]))){
-                            setMachine("#washer"+floor,"?",d)
-                            setMachine("#dryer"+floor,"?",d)
-                            continue
-                        }
-                        if (Date.now()-d2 > 60*1000) {
-                            $("#t"+floor).text("Last Seen "+d.toLocaleDateString())
-                            setMachine("#washer"+floor,"?",d)
-                            setMachine("#dryer"+floor,"?",d)
-                            continue
-                        }
-                        $("#t"+floor).text("Last Updated "+d.toLocaleTimeString())
-                        w = ["wash","both"].includes(data[floor][0]) ? "no": "yes"
-                        d = ["dry", "both"].includes(data[floor][0]) ? "no": "yes"
-                        
-                        setMachine("#washer"+floor,w,d)
-                        setMachine("#dryer"+floor,d,d)
-                    }                    
-                })
-            }
-            update()
-            setInterval(function() {
-                update()
-            }, 1000);
+          });
         });
-    </script>
+    }
+
+    update();
+    setInterval(function () {
+      update();
+    }, 5000);
+  });
+</script>
 {% endblock %}
