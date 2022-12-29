@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import getstatus
 import constants as const
-import json
 import db
 from datetime import datetime
 
@@ -25,7 +24,22 @@ def status_json():
 
     d = dict(zip([s[0] for s in statusd],[s[1:] for s in statusd]))
 
-    return json.dumps(d)
+    return jsonify(d)
+
+@app.route("/v2/status-json")
+def status_json_v2():
+    status = [
+        {
+            "floor": line[0],
+            "wash": line[1] in ("wash","both"),
+            "dry": line[1] in ("dry", "both"),
+            "time": line[2],
+            "last_seen": line[3]
+        } for line in db.getLatest()
+    ]
+
+    return jsonify(status)
+
 
 @app.route("/histogram")
 def histogram(location="4",weekday=0):
@@ -39,7 +53,7 @@ def histogram_json():
     location = request.args.get('location', "4", type=str)
     weekday = request.args.get('location', "0", type=str)
     hist = db.getHist(location,weekday)
-    return json.dumps(hist)
+    return jsonify(hist)
 
 @app.route("/event-json")
 def events_json():
@@ -47,7 +61,7 @@ def events_json():
     hours = request.args.get('hours',24, type=int)
     ev = db.getEvents(location,hours)
     dict = {"time": [e[0] for e in ev],"status": [e[1] for e in ev]}
-    return json.dumps(dict)
+    return jsonify(dict)
 
 @app.route("/cycles-json")
 def cycles_json():
@@ -59,7 +73,7 @@ def cycles_json():
     else:
         ev = db.getDryCycles(location,hours)
     dict = {'start':[e[0] for e in ev],"end": [e[1] for e in ev]}
-    return json.dumps(dict)
+    return jsonify(dict)
 
 @app.route("/rawcurrent-json")
 def current_json():
@@ -70,7 +84,7 @@ def current_json():
     res = db.getCurrent(location,minutes)
 
     dict = {"time": [c[2] for c in res],"current": [c[1] for c in res]}
-    return json.dumps(dict)
+    return jsonify(dict)
 
 @app.route("/rawcurrent-range-json")
 def current_range_json():
@@ -80,7 +94,7 @@ def current_range_json():
     res = db.getCurrentRange(location,start,end)
 
     dict = {"time": [c[2] for c in res],"current": [c[1] for c in res]}
-    return json.dumps(dict)
+    return jsonify(dict)
 
 @app.route("/current-graph")
 def current_graph():
