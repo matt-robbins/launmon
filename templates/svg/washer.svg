@@ -7,6 +7,7 @@
   enable-background="new 0 0 342.863 342.863"
   class="machine washer"
 >
+  <defs>{% include './svg/drop-shadow-filter' %}</defs>
   <g>
     <path
       d="M335.363,0H7.5C3.357,0,0,3.358,0,7.5v327.863c0,4.142,3.357,7.5,7.5,7.5h327.863c4.143,0,7.5-3.358,7.5-7.5V7.5   C342.863,3.358,339.506,0,335.363,0z M327.863,15v50.825H15V15H327.863z M15,327.863V80.825h312.863v247.039H15z"
@@ -22,6 +23,5 @@
       d="m208.19,46.802h25.371c4.143,0 7.5-3.358 7.5-7.5s-3.357-7.5-7.5-7.5h-25.371c-4.143,0-7.5,3.358-7.5,7.5s3.358,7.5 7.5,7.5z"
     />
   </g>
-  <text class="label label-offset" x="50%" y="55%">Offline</text>
-  <text class="label" x="50%" y="55%">Offline</text>
+  <text class="label" x="50%" y="55%" filter="url(#drop-shadow)">Offline</text>
 </svg>
