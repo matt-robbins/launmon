@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import getstatus
 import constants as const
 import db
@@ -10,8 +10,8 @@ db = db.LaundryDb()
 STATUS = ["none","wash","dry","both"]
 @app.route("/")
 def hello():
-    return render_template('laundry.html', 
-        names = ['Fourth Floor','Third Floor', 'Second Floor', 'Basement'], 
+    return render_template('laundry.html',
+        names = ['Fourth Floor','Third Floor', 'Second Floor', 'Basement'],
         weekday = int(datetime.today().strftime('%w')))
 
 @app.route("/status")
@@ -107,7 +107,11 @@ def washing():
     if (s in [0,2]):
         return "1"
     else:
-        return "0" 
+        return "0"
+
+@app.route("/.well-known/<path:path>")
+def well_known(path):
+    return send_from_directory('static', path)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
