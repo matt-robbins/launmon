@@ -1,1 +1,1 @@
-STATUS_PATH = '/tmp/laundrystatus'
+STATUS_PATH = "/tmp/laundrystatus"
