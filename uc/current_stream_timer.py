@@ -8,7 +8,6 @@ import math
 import secrets
 
 SERVER_NAME="launmon.ddns.net"
-PORT=5005
 
 led = machine.Pin("LED", machine.Pin.OUT)
 
@@ -24,6 +23,10 @@ average = 0
 dif_sum = 0
 variance = 0
 std = 0
+
+def get_ip(host, port=80):
+    addr_info = socket.getaddrinfo(host, port)
+    return addr_info[0][-1][0]
 
 def newsample(t):
     global x,ix,average,win_sum,dif_sum,variance,N
@@ -55,19 +58,19 @@ while not wlan.isconnected() and wlan.status() >= 0:
     print("...")
 print("wifi connected.")
 
-def get_ip(host, port=80):
-    addr_info = socket.getaddrinfo(host, port)
-    return addr_info[0][-1][0]
+wdt = machine.WDT(timeout=5000)
 
-ip = get_ip(SERVER_NAME)
-print(ip)
+try:
+    ip = get_ip(SERVER_NAME)
+    print(ip)
+except IOError:
+    print("DNS failed")
+    machine.reset()
+        
 
 led.on()
 sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-server = (ip,PORT)
-
-# s = socket.socket()
-# s.connect(ip)
+server = (ip,secrets.PORT)
 
 starttime = time.time()
 timer2 = machine.Timer()
@@ -75,7 +78,10 @@ timer2.init(period=1000,mode=machine.Timer.PERIODIC,
             callback=lambda t:
                 sock.sendto("%s\n" % variance, server))
 
-# utime.sleep(2)
-# while True:
-#     print(variance)
-#     utime.sleep(1)
+utime.sleep(2)
+wdt = machine.WDT(timeout=2000)
+while True:
+    print(variance)
+    print("time is ticking")
+    utime.sleep(1)
+    wdt.feed()
