@@ -1,5 +1,7 @@
 import os
 import sys
+
+
 def tail(f, n=1, bsize=4098):
     """Tail a file and get X lines from the end"""
     # place holder for the lines found
@@ -20,9 +22,8 @@ def tail(f, n=1, bsize=4098):
 
     return lines[-n:]
 
+
 if __name__ == "__main__":
-
-    with open(sys.argv[1],'rb') as f:
-        lines = tail(f,10)
+    with open(sys.argv[1], "rb") as f:
+        lines = tail(f, 10)
         print(lines)
-
