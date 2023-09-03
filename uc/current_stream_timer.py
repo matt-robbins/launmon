@@ -85,4 +85,5 @@ while True:
     print("time is ticking")
 
     utime.sleep(1)
-    wdt.feed()
+    if wlan.isconnected():
+        wdt.feed()
