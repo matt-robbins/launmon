@@ -14,10 +14,12 @@
           Never
         </h6>
         <div class="row mb-2 pl-2 text-center">
-          <div class="dryer-container col">{% include './svg/dryer.svg' %}</div>
+          <div class="dryer-container col" id="dryer-{{loop.revindex}}">
+            {% include './svg/dryer.svg' %}
+          </div>
         </div>
         <div class="row pl-2 pb-2 text-center">
-          <div class="washer-container col">
+          <div class="washer-container col" id="washer-{{loop.revindex}}">
             {% include './svg/washer.svg' %}
           </div>
         </div>
@@ -86,6 +88,14 @@
     setInterval(function () {
       update();
     }, 5000);
+
+    for (fl = 1; fl < 5; fl++) {
+      const floor = $(`#floor-${fl}`);
+      floor.find("svg.washer").on("click", function() {
+        console.log("clicked!")
+        window.subscribe(fl)
+      })
+    }
   });
 </script>
 {% endblock %}

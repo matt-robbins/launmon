@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response, send_from_directory
 import getstatus
 import db
 from datetime import datetime
@@ -8,6 +8,13 @@ db = db.LaundryDb()
 
 STATUS = ["none", "wash", "dry", "both"]
 
+@app.route('/webpush-sw.js')
+def sw():
+    response=make_response(
+        send_from_directory('static','webpush-sw.js'))
+    #change the content header file. Can also omit; flask will handle correctly.
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
 
 @app.route("/")
 def hello():
@@ -17,6 +24,12 @@ def hello():
         weekday=int(datetime.today().strftime("%w")),
     )
 
+@app.route("/subscription",methods = ['POST'])
+def subscribe():
+    if request.method == 'POST':
+        print(request.get_json())
+        return "!"
+    return "?"
 
 @app.route("/status")
 def status():
