@@ -8,3 +8,4 @@ pyzmq==24.0.1
 uWSGI==2.0.21
 Werkzeug==2.2.2
 zmcat==0.0.11
+pywebpush=1.10.0

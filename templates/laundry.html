@@ -91,9 +91,10 @@
 
     for (fl = 1; fl < 5; fl++) {
       const floor = $(`#floor-${fl}`);
-      floor.find("svg.washer").on("click", function() {
-        console.log("clicked!")
-        window.subscribe(fl)
+      floor.on("click", function(event) {
+
+        console.log(event.currentTarget.id)
+        window.subscribe(machine=event.currentTarget.id.split("-")[1])
       })
     }
   });

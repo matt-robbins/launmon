@@ -31,6 +31,12 @@ class LaundryDb:
             (location TEXT UNIQUE, calibration REAL)
             """
         )
+        self.create(
+            """
+            CREATE TABLE IF NOT EXISTS subscriptions
+            (subscription TEXT UNIQUE, location TEXT)
+            """
+        )
 
     def insert(self, query, args):
         with closing(sqlite3.connect(self.path)) as con:
@@ -176,7 +182,22 @@ class LaundryDb:
             AND location = ?
         """
         return self.fetch(sqlt, (start, end, location))
+    
+    def insertSubscription(self,subscription="",location="1"):
+        sqlt = """
+        INSERT INTO subscriptions (subscription,location) VALUES (:sub,:loc)
+        ON CONFLICT (subscription) DO UPDATE SET location=:loc;"""
 
+        self.insert(sqlt, {"sub": subscription, "loc": location})
+
+    def getSubscriptions(self,location="1"):
+        return self.fetch("SELECT subscription FROM subscriptions WHERE location = ?", location)
+
+    def deleteSubscription(self,subscription=""):
+        sqlt = """DELETE FROM subscriptions WHERE subscription = ?;"""
+        self.insert(sqlt,subscription)
+
+    
 
 if __name__ == "__main__":
     db = LaundryDb()

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, make_response, send_from_directory
 import getstatus
 import db
+import json
 from datetime import datetime
 
 app = Flask(__name__)
@@ -27,7 +28,10 @@ def hello():
 @app.route("/subscription",methods = ['POST'])
 def subscribe():
     if request.method == 'POST':
-        print(request.get_json())
+        sub = request.get_json()
+
+        print(sub['subscription'])
+        db.insertSubscription(json.dumps(sub['subscription']),sub['machine'])
         return "!"
     return "?"
 

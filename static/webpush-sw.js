@@ -4,11 +4,9 @@ self.addEventListener('install', () => {
 
 self.addEventListener('push', function(event) {
 	console.log('Push message received.');
-	let notificationTitle = 'Hello';
+	let notificationTitle = 'Laundry Done!';
 	const notificationOptions = {
-		body: 'Thanks for sending this push msg.',
-		icon: './images/logo-192x192.png',
-		badge: './images/badge-72x72.png',
+		body: 'Come and get it.',
 		data: {
 			url: 'https://laundry.375lincoln.nyc',
 		},
@@ -16,8 +14,8 @@ self.addEventListener('push', function(event) {
 
 	if (event.data) {
 		const dataText = event.data.text();
-		notificationTitle = 'Received Payload';
-		notificationOptions.body = `Push data: '${dataText}'`;
+		notificationTitle = 'Laundry Done!';
+		notificationOptions.body = dataText;
 	}
 
 	event.waitUntil(
