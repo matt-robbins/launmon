@@ -2,6 +2,7 @@ from pywebpush import webpush, WebPushException
 from db import LaundryDb
 from multiprocessing import Process
 import json
+import sys
 
 def push(subscription={}):
     try:
@@ -25,8 +26,14 @@ def push(subscription={}):
 
 if __name__ == '__main__':
     d = LaundryDb()
-    for s in d.getSubscriptions('1'):
-        p = Process(target=push,args=(json.loads(s[0]),))
+    location = '1'
+    if (len(sys.argv) > 1):
+        location = sys.argv[1]
+
+    for s in d.getSubscriptions(location):
+        sub = json.loads(s[0])
+        p = Process(target=push,args=(sub,))
         p.start()
-        d.deleteSubscription(subscription=s)
+        print(sub['endpoint'])
+        d.deleteSubscription(endpoint=sub['endpoint'],location=location)
 

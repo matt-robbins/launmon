@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block content %}
 <div class="container w-100">
-  <h1>{% block title %} 375 Lincoln Place Laundry Monitor {% endblock %}</h1>
+  <h1>{% block title %} Laundry Status {% endblock %}</h1>
 
   <div class="row">
     {% for floor in names %}
@@ -23,12 +23,15 @@
             {% include './svg/washer.svg' %}
           </div>
         </div>
+        <div class="row pl-2 pb-2 text-center">
+          <button type="button" id="subscribe-{{loop.revindex}}" class="btn btn-outline-primary btn-sm">Notify Me</button>
+        </div>
       </div>
     </div>
     {% endfor %}
   </div>
 </div>
-
+<script src="/static/util.js"></script>
 <script>
   running = {}
   was_running = {}
@@ -90,13 +93,17 @@
     }, 5000);
 
     for (fl = 1; fl < 5; fl++) {
-      const floor = $(`#floor-${fl}`);
+      const floor = $(`#subscribe-${fl}`);
       floor.on("click", function(event) {
 
         console.log(event.currentTarget.id)
         window.subscribe(machine=event.currentTarget.id.split("-")[1])
+        
       })
     }
+    
+    updateSubscriptions()
+    
   });
 </script>
 {% endblock %}

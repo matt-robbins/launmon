@@ -34,7 +34,8 @@ class LaundryDb:
         self.create(
             """
             CREATE TABLE IF NOT EXISTS subscriptions
-            (subscription TEXT UNIQUE, location TEXT)
+            (endpoint TEXT, location TEXT, subscription TEXT,
+            UNIQUE(endpoint,location))
             """
         )
 
@@ -183,19 +184,30 @@ class LaundryDb:
         """
         return self.fetch(sqlt, (start, end, location))
     
-    def insertSubscription(self,subscription="",location="1"):
+    def insertSubscription(self,endpoint="",location="1",subscription=""):
         sqlt = """
-        INSERT INTO subscriptions (subscription,location) VALUES (:sub,:loc)
-        ON CONFLICT (subscription) DO UPDATE SET location=:loc;"""
+        INSERT OR IGNORE INTO subscriptions (endpoint,location,subscription) 
+        VALUES (:ep,:loc,:sub)
+        ;"""
 
-        self.insert(sqlt, {"sub": subscription, "loc": location})
+        self.insert(sqlt, {"ep": endpoint, "loc": location, "sub": subscription})
 
     def getSubscriptions(self,location="1"):
-        return self.fetch("SELECT subscription FROM subscriptions WHERE location = ?", location)
+        if location == "all" or location is None:
+            return self.fetch("SELECT subscription FROM subscriptions") 
+        else:
+            return self.fetch("SELECT subscription FROM subscriptions WHERE location = ?", location)
 
-    def deleteSubscription(self,subscription=""):
-        sqlt = """DELETE FROM subscriptions WHERE subscription = ?;"""
-        self.insert(sqlt,subscription)
+    def checkSubscription(self,endpoint=""):
+        r = self.fetch(
+            "SELECT location FROM subscriptions WHERE endpoint = ?", (endpoint,))
+        return [v[0] for v in r]
+
+    def deleteSubscription(self,endpoint="", location=""):
+        sqlt = """DELETE FROM subscriptions 
+            WHERE endpoint = ? AND
+            location = ?;"""
+        self.insert(sqlt,(endpoint,location))
 
     
 

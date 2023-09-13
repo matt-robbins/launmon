@@ -1,5 +1,10 @@
+
 self.addEventListener('install', () => {
 	self.skipWaiting();
+});
+
+self.addEventListener('activate', function(event) {
+    event.waitUntil(self.clients.claim()); // Become available to all pages
 });
 
 self.addEventListener('push', function(event) {
@@ -17,6 +22,10 @@ self.addEventListener('push', function(event) {
 		notificationTitle = 'Laundry Done!';
 		notificationOptions.body = dataText;
 	}
+    clients.matchAll().then(function(cli){
+        console.log("clients: " +cli)
+        cli[0].postMessage("hello")
+    });
 
 	event.waitUntil(
 		self.registration.showNotification(

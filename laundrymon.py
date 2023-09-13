@@ -28,12 +28,21 @@ def hello():
 @app.route("/subscription",methods = ['POST'])
 def subscribe():
     if request.method == 'POST':
-        sub = request.get_json()
+        data = request.get_json()
 
-        print(sub['subscription'])
-        db.insertSubscription(json.dumps(sub['subscription']),sub['machine'])
+        ep = data['subscription']['endpoint']
+        sub = json.dumps(data['subscription'])
+        loc = data['machine']
+
+        db.insertSubscription(ep,loc,sub)
         return "!"
     return "?"
+
+@app.route("/check-subscription")
+def check_subscription(endpoint=""):
+    endpoint = request.args.get("url", "", type=str)
+    sub = db.checkSubscription(endpoint)
+    return jsonify(sub)
 
 @app.route("/status")
 def status():

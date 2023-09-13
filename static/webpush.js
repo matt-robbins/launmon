@@ -16,6 +16,22 @@ const urlBase64ToUint8Array = (base64String) => {
   return outputArray;
 };
 
+function askPermission() {
+    return new Promise(function (resolve, reject) {
+        const permissionResult = Notification.requestPermission(function (result) {
+            resolve(result);
+        });
+
+        if (permissionResult) {
+            permissionResult.then(resolve, reject);
+        }
+    }).then(function (permissionResult) {
+        if (permissionResult !== 'granted') {
+        throw new Error("We weren't granted permission.");
+        }
+    });
+}
+
 window.subscribe = async (machine=4) => {
     console.log("subscribing?")
     if (!('serviceWorker' in navigator)) {
@@ -26,6 +42,14 @@ window.subscribe = async (machine=4) => {
     const registration = await navigator.serviceWorker.ready;
 
     console.log("ready")
+
+    navigator.serviceWorker.addEventListener("message", (message) => {
+        console.log("got message! updating subscriptions")
+        updateSubscriptions()
+    })
+
+    askPermission()
+
     // Subscribe to push notifications
     const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -40,6 +64,8 @@ window.subscribe = async (machine=4) => {
             'content-type': 'application/json',
         },
     });
+
+    updateSubscriptions()
 };
 
 
