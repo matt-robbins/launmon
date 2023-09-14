@@ -32,7 +32,7 @@ function askPermission() {
     });
 }
 
-window.subscribe = async (machine=4) => {
+window.subscribe = async (machine=4,unsubscribe=false) => {
     console.log("subscribing?")
     if (!('serviceWorker' in navigator)) {
         console.log("no service worker :(")
@@ -56,14 +56,21 @@ window.subscribe = async (machine=4) => {
         applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
     });
 
-    console.log(subscription)
-    await fetch('/subscription', {
-        method: 'POST',
-        body: JSON.stringify({'subscription': subscription, 'machine': machine}),
-        headers: {
-            'content-type': 'application/json',
-        },
-    });
+    console.log("unsubscribe="+unsubscribe)
+
+    if (!unsubscribe) {
+        await fetch('/subscription', {
+            method: 'POST',
+            body: JSON.stringify({'subscription': subscription, 'machine': machine}),
+            headers: {
+                'content-type': 'application/json',
+            },
+        });
+    }
+    else {
+        url = "/unsubscribe?location="+machine+"&url="+encodeURIComponent(subscription.endpoint)
+        await fetch(url);
+    }
 
     updateSubscriptions()
 };

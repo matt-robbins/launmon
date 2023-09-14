@@ -44,6 +44,13 @@ def check_subscription(endpoint=""):
     sub = db.checkSubscription(endpoint)
     return jsonify(sub)
 
+@app.route("/unsubscribe")
+def unsubscribe():
+    endpoint = request.args.get("url","", type=str)
+    location = request.args.get("location","", type=str)
+    db.deleteSubscription(endpoint,location)
+    return "{}"
+
 @app.route("/status")
 def status():
     return "???"
