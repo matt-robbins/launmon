@@ -1,9 +1,28 @@
 import socket
+import select
+import redis
 UDP_IP = "0.0.0.0"
 
 class RedisPub:
+    def sanitize_data(self, data):
+        return float(data.strip())
+    
+    def run():
+        while True:
+            readable, _writable, _except = select.select(self.sockets, [], [])
+            for s in readable:
+                data, addr = s.recvfrom(1024)
+                port = s.getsockname()[1]
+                ix = self.ports.index(port)
+                try:
+                    sanitized = self.sanitize_data(data)
+                except ValueError:
+                    print("bad value %s from %s" % (data, addr))
+                    continue
+                machine = self.machines[ix]
+
     def __init__(self, nlocations, base_port):
-        
+        r = redis.Redis(host="375lincoln.nyc",password="skinnytires")
         self.sockets = []
         self.ports = []
         self.machines = []
