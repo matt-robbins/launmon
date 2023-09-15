@@ -1,11 +1,6 @@
 
-function setButtonSubscribed(button, subscribed) {
-    if(subscribed) {
-        button.removeClass("btn-outline-primary").addClass("btn-primary")
-    }
-    else {
-        button.removeClass("btn-primary").addClass("btn-outline-primary")
-    }
+function setButtonSubscribed(checkbox, subscribed) {
+    checkbox[0].checked = subscribed
 }
 
 function isButtonSubscribed(button) {
@@ -23,7 +18,7 @@ function updateSubscriptions() {
             .then((list) => { 
                 ["1","2","3","4"].forEach(item => {
                     window.subscriptions = list
-                    setButtonSubscribed($("#subscribe-"+item), list.includes(item))
+                    setButtonSubscribed($("#subcheck-"+item), list.includes(item))
                 })
             })
         })
@@ -34,7 +29,6 @@ function updateSubscriptions() {
 function unsubscribeFrom(location) {
     url = "/unsubscribe?location="+location+"&url="+encodeURIComponent(window.subscriptionEndpoint)
     fetch(url).then((resp) => {
-        setButtonSubscribed($("subscribe-"+location), false)
     })
     return
 }

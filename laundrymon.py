@@ -19,9 +19,12 @@ def sw():
 
 @app.route("/")
 def hello():
+    names = db.getNames()
+    names.reverse()
+    print(names)
     return render_template(
         "laundry.html",
-        names=["Fourth Floor", "Third Floor", "Second Floor", "Basement"],
+        names=names,
         weekday=int(datetime.today().strftime("%w")),
     )
 
@@ -74,6 +77,7 @@ def status_json_v2():
             "dry": line[1] in ("dry", "both"),
             "time": line[2],
             "last_seen": line[3],
+            "location": line[4],
         }
         for line in db.getLatest()
     ]

@@ -72,7 +72,7 @@ class LaundryDb:
         self.insert(sqlt, {"loc": location, "ts": time})
 
     def getLatest(self):
-        sqlt = """SELECT e.location, e.status, e.time, l.lastseen FROM events e
+        sqlt = """SELECT e.location, e.status, e.time, l.lastseen, l.nickname FROM events e
                 INNER JOIN (
                     SELECT location, max(time) as MaxDate 
                     FROM events 
@@ -183,6 +183,18 @@ class LaundryDb:
             AND location = ?
         """
         return self.fetch(sqlt, (start, end, location))
+    
+    def getName(self,location="1"):
+        sqlt = """
+            SELECT coalesce(nickname, location) FROM locations WHERE location = ? LIMIT 1
+        """
+        return self.fetch(sqlt, (location,))[0][0]
+    
+    def getNames(self):
+        sqlt = """
+            SELECT coalesce(nickname, location) FROM locations ORDER BY location;
+        """
+        return [n[0] for n in self.fetch(sqlt)]
     
     def insertSubscription(self,endpoint="",location="1",subscription=""):
         sqlt = """

@@ -23,8 +23,11 @@
             {% include './svg/washer.svg' %}
           </div>
         </div>
-        <div class="row pl-2 pb-2 text-center">
-          <button type="button" id="subscribe-{{loop.revindex}}" class="btn btn-outline-primary btn-sm">Notify Me</button>
+        <div class="row pl-2 pb-2">
+          <div class="">
+            <input class="btn-check" type="checkbox" id="subcheck-{{loop.revindex}}" autocomplete="off">
+            <label class="btn btn-outline-primary" for="subcheck-{{loop.revindex}}">Notify Me</label>
+          </div>
         </div>
       </div>
     </div>
@@ -47,10 +50,6 @@
             const lastUpdated = new Date(`${floorStatus.time}Z`);
             
             running[floorStatus.floor] = floorStatus.wash || floorStatus.dry
-
-            if (!running[floorStatus.floor] && was_running[floorStatus.floor]){
-              alert('Done!')
-            }
 
             if (Date.now() - lastSeen > 60 * 1000) {
               floor
@@ -85,6 +84,7 @@
             }
           });
         });
+        updateSubscriptions()
     }
     window.subscriptions = []
     update();
@@ -94,7 +94,7 @@
 
     console.log(window.subscriptionEndpoint)
     for (fl = 1; fl < 5; fl++) {
-      const floor = $(`#subscribe-${fl}`);
+      const floor = $(`#subcheck-${fl}`);
       floor.on("click", function(event) {
 
         console.log(event.currentTarget.id)

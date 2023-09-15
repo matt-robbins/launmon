@@ -4,11 +4,11 @@ from multiprocessing import Process
 import json
 import sys
 
-def push(subscription={}):
+def push(subscription={},name="basement"):
     try:
         webpush(
             subscription_info=subscription,
-            data="Get it while it's hot.",
+            data=name,
             vapid_private_key="m1Wni8qP-jjDa0jPaczGSZRsulQHAm5olCv7bXO81Go",
             vapid_claims={
                     "sub": "mailto:matthew.robbins@gmail.com",
@@ -32,7 +32,9 @@ if __name__ == '__main__':
 
     for s in d.getSubscriptions(location):
         sub = json.loads(s[0])
-        p = Process(target=push,args=(sub,))
+        name = d.getName(location)
+        print(name)
+        p = Process(target=push,args=(sub,name))
         p.start()
         print(sub['endpoint'])
         d.deleteSubscription(endpoint=sub['endpoint'],location=location)

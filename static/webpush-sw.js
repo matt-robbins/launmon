@@ -19,8 +19,8 @@ self.addEventListener('push', function(event) {
 
 	if (event.data) {
 		const dataText = event.data.text();
-		notificationTitle = 'Laundry Done!';
-		notificationOptions.body = dataText;
+		notificationTitle = dataText+' Laundry Done!';
+		notificationOptions.body = "Get it while it's hot!";
 	}
     clients.matchAll().then(function(cli){
         console.log("clients: " +cli)
