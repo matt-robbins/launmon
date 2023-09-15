@@ -106,15 +106,7 @@ class SocketReader:
         self.db.addEvent(machine, status, datetime.datetime.utcnow())
 
         if status == "none":
-            subs = self.db.getSubscriptions(machine)
-            for s in subs:
-                sub = json.loads(s[0])
-                name = self.db.getName(machine)
-                p = Process(target=webpush.push, args=(sub,name))
-                p.start()
-                # note that we don't explicitly wait() for the process to finish
-                # tested and I don't *think* this causes zombies. lol.
-                self.db.deleteSubscription(endpoint=sub['endpoint'],location=machine)
+            webpush.push(self.db,machine)
             
     def __init__(self, nlocations, base_port):
         try:
