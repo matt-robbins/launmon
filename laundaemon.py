@@ -109,7 +109,8 @@ class SocketReader:
             subs = self.db.getSubscriptions(machine)
             for s in subs:
                 sub = json.loads(s[0])
-                p = Process(target=webpush.push, args=(sub,))
+                name = self.db.getName(machine)
+                p = Process(target=webpush.push, args=(sub,name))
                 p.start()
                 # note that we don't explicitly wait() for the process to finish
                 # tested and I don't *think* this causes zombies. lol.

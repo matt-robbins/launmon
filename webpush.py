@@ -4,7 +4,7 @@ from multiprocessing import Process
 import json
 import sys
 
-def push(subscription={},name="basement"):
+def push_main(subscription={},name="basement"):
     try:
         webpush(
             subscription_info=subscription,
@@ -24,18 +24,21 @@ def push(subscription={},name="basement"):
                 extra.message
                 )
 
+def push(db, location):
+    for s in db.getSubscriptions(location):
+        sub = json.loads(s[0])
+        name = db.getName(location)
+
+        # note that we don't explicitly wait() for the process to finish
+        # tested and I don't *think* this causes zombies. lol.
+        p = Process(target=push_main,args=(sub,name))
+        p.start()
+        db.deleteSubscription(endpoint=sub['endpoint'],location=location)
+
 if __name__ == '__main__':
     d = LaundryDb()
     location = '1'
     if (len(sys.argv) > 1):
         location = sys.argv[1]
 
-    for s in d.getSubscriptions(location):
-        sub = json.loads(s[0])
-        name = d.getName(location)
-        print(name)
-        p = Process(target=push,args=(sub,name))
-        p.start()
-        print(sub['endpoint'])
-        d.deleteSubscription(endpoint=sub['endpoint'],location=location)
-
+    push(d,location)
