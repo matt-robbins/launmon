@@ -7,7 +7,19 @@ function isButtonSubscribed(button) {
     return button.hasClass("btn-primary")
 }
 
+function setButtonEnabled(checkbox, enabled) {
+    checkbox[0].disabled = !enabled
+}
+
+function checkServiceWorkers() {
+    return ('serviceWorker' in navigator)
+}
+
 function updateSubscriptions() {
+
+    if (!checkServiceWorkers()) {
+        return
+    }
     
     navigator.serviceWorker.getRegistration("/").then((registration) => {
         if (registration) {

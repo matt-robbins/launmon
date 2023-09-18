@@ -28,6 +28,17 @@ def hello():
         weekday=int(datetime.today().strftime("%w")),
     )
 
+@app.route('/favicon.ico')
+def favicon():
+    response=make_response(send_from_directory('static','favicon.ico'))
+
+    response.headers['Content-Type'] = 'image/vnd.microsoft.icon'
+    return response
+
+@app.route("/icons/<path:path>")
+def getIcon(path):
+    return send_from_directory('static/icons',path)
+
 @app.route("/subscription",methods = ['POST'])
 def subscribe():
     if request.method == 'POST':

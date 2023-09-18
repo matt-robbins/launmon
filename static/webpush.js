@@ -35,7 +35,14 @@ function askPermission() {
 window.subscribe = async (machine=4,unsubscribe=false) => {
     console.log("subscribing?")
     if (!('serviceWorker' in navigator)) {
-        console.log("no service worker :(")
+        alert("Your browser does not seem to support Service Workers. " +
+        "This means you'll be unable to recieve push messages.")
+
+        $('.notify-button').each(function() {
+            setButtonEnabled($( this ), false)
+            setButtonSubscribed($( this), false)
+        });
+
         return;
     }
     console.log("waiting for service worker to be ready")
@@ -49,6 +56,12 @@ window.subscribe = async (machine=4,unsubscribe=false) => {
     })
 
     askPermission()
+
+    if (!('pushManager' in registration)) {
+        alert("Unable to subscribe to push messages. " +
+            "On iOS, check that Push API is enabled, " +
+            "and add this site as a bookmark to your home screen.")
+    }
 
     // Subscribe to push notifications
     const subscription = await registration.pushManager.subscribe({

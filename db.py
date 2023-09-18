@@ -1,11 +1,12 @@
 import sqlite3
 import datetime
+import os
 from contextlib import closing
 
 
 class LaundryDb:
     def __init__(self, path="laundry.db"):
-        self.path = path
+        self.path = os.getenv("LAUNMON_DB_PATH", path)
         self.create(
             """
             CREATE TABLE IF NOT EXISTS events 
