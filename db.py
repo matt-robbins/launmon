@@ -1,11 +1,12 @@
 import sqlite3
 import datetime
+import os
 from contextlib import closing
 
 
 class LaundryDb:
     def __init__(self, path="laundry.db"):
-        self.path = path
+        self.path = os.getenv("LAUNMON_DB_PATH", path)
         self.create(
             """
             CREATE TABLE IF NOT EXISTS events 
@@ -29,6 +30,13 @@ class LaundryDb:
             """
             CREATE TABLE IF NOT EXISTS calibration 
             (location TEXT UNIQUE, calibration REAL)
+            """
+        )
+        self.create(
+            """
+            CREATE TABLE IF NOT EXISTS subscriptions
+            (endpoint TEXT, location TEXT, subscription TEXT,
+            UNIQUE(endpoint,location))
             """
         )
 
@@ -65,7 +73,7 @@ class LaundryDb:
         self.insert(sqlt, {"loc": location, "ts": time})
 
     def getLatest(self):
-        sqlt = """SELECT e.location, e.status, e.time, l.lastseen FROM events e
+        sqlt = """SELECT e.location, e.status, e.time, l.lastseen, l.nickname FROM events e
                 INNER JOIN (
                     SELECT location, max(time) as MaxDate 
                     FROM events 
@@ -176,7 +184,45 @@ class LaundryDb:
             AND location = ?
         """
         return self.fetch(sqlt, (start, end, location))
+    
+    def getName(self,location="1"):
+        sqlt = """
+            SELECT coalesce(nickname, location) FROM locations WHERE location = ? LIMIT 1
+        """
+        return self.fetch(sqlt, (location,))[0][0]
+    
+    def getNames(self):
+        sqlt = """
+            SELECT coalesce(nickname, location) FROM locations ORDER BY location;
+        """
+        return [n[0] for n in self.fetch(sqlt)]
+    
+    def insertSubscription(self,endpoint="",location="1",subscription=""):
+        sqlt = """
+        INSERT OR IGNORE INTO subscriptions (endpoint,location,subscription) 
+        VALUES (:ep,:loc,:sub)
+        ;"""
 
+        self.insert(sqlt, {"ep": endpoint, "loc": location, "sub": subscription})
+
+    def getSubscriptions(self,location="1"):
+        if location == "all" or location is None:
+            return self.fetch("SELECT subscription FROM subscriptions") 
+        else:
+            return self.fetch("SELECT subscription FROM subscriptions WHERE location = ?", location)
+
+    def checkSubscription(self,endpoint=""):
+        r = self.fetch(
+            "SELECT location FROM subscriptions WHERE endpoint = ?", (endpoint,))
+        return [v[0] for v in r]
+
+    def deleteSubscription(self,endpoint="", location=""):
+        sqlt = """DELETE FROM subscriptions 
+            WHERE endpoint = ? AND
+            location = ?;"""
+        self.insert(sqlt,(endpoint,location))
+
+    
 
 if __name__ == "__main__":
     db = LaundryDb()

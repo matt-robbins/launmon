@@ -1,91 +1,43 @@
 {% extends 'base.html' %} {% block content %}
 <div class="container w-100">
-  <h1>{% block title %} 375 Lincoln Place Laundry Monitor {% endblock %}</h1>
-
-  <div class="row">
+  
+  <div class="col">
     {% for floor in names %}
-    <div class="col-sm card m-1 container">
-      <div class="class-body" id="floor-{{loop.revindex}}">
-        <h5 class="card-title mt-1">{{ floor }}</h5>
-        <h6
-          class="card-subtitle text-muted mb-2"
-          data-js-attr="floor-updated-at"
-        >
-          Never
-        </h6>
-        <div class="row mb-2 pl-2 text-center">
-          <div class="dryer-container col">{% include './svg/dryer.svg' %}</div>
-        </div>
-        <div class="row pl-2 pb-2 text-center">
-          <div class="washer-container col">
-            {% include './svg/washer.svg' %}
+    <div class="col-sm card mb-3" style="max-width: 600px;">
+      <div class="class-body d-flex flex-row justify-content-between m-2" id="floor-{{loop.revindex}}">
+
+        <div class="d-flex flex-column justify-content-between">
+          <div class="row">
+            <h5 class="card-title">{{ floor }}</h5>
+            <h6 class="card-subtitle text-muted mb-2" data-js-attr="floor-updated-at">
+              Never
+            </h6>
           </div>
+          <div>
+
+          </div>
+          <div class="row-1 d-flex align-items-end">
+            <div class="">
+              <input class="btn-check notify-button" type="checkbox" id="subcheck-{{loop.revindex}}" autocomplete="off">
+              <label class="btn btn-outline-primary" for="subcheck-{{loop.revindex}}">Notify Me</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex flex-column justify-content-between">
+            <div class="dryer-container pb-2" id="dryer-{{loop.revindex}}">
+              {% include './svg/dryer.svg' %}
+            </div>
+            <div class="washer-container" id="washer-{{loop.revindex}}">
+              {% include './svg/washer.svg' %}
+            </div>
         </div>
       </div>
     </div>
     {% endfor %}
   </div>
 </div>
-
-<script>
-  running = {}
-  was_running = {}
-  $(function () {
-    function update() {
-      Object.assign(was_running,running);
-      fetch(`${$SCRIPT_ROOT}/v2/status-json`)
-        .then((resp) => resp.json())
-        .then((status) => {
-          status.forEach((floorStatus) => {
-            const floor = $(`#floor-${floorStatus.floor}`);
-            const lastSeen = new Date(`${floorStatus.last_seen}Z`);
-            const lastUpdated = new Date(`${floorStatus.time}Z`);
-            
-            running[floorStatus.floor] = floorStatus.wash || floorStatus.dry
-            console.log(running,was_running)
-            if (!running[floorStatus.floor] && was_running[floorStatus.floor]){
-              alert('Done!')
-            }
-
-            if (Date.now() - lastSeen > 60 * 1000) {
-              floor
-                .find("[data-js-attr='floor-updated-at']")
-                .text(`Last seen: ${lastSeen.toLocaleDateString()}`);
-              floor
-                .find("svg.washer")
-                .attr("class", "machine washer")
-                .find(".label")
-                .text("Offline");
-              floor
-                .find("svg.dryer")
-                .attr("class", "machine dryer")
-                .find(".label")
-                .text("Offline");
-            } else {
-              floor
-                .find("[data-js-attr='floor-updated-at']")
-                .text(`Last updated: ${lastUpdated.toLocaleTimeString()}`);
-              floor
-                .find("svg.washer")
-                .toggleClass("running", floorStatus.wash === true)
-                .toggleClass("available", floorStatus.wash === false)
-                .find(".label")
-                .text(floorStatus.wash === true ? "Running" : "Available");
-              floor
-                .find("svg.dryer")
-                .toggleClass("running", floorStatus.dry === true)
-                .toggleClass("available", floorStatus.dry === false)
-                .find(".label")
-                .text(floorStatus.dry === true ? "Running" : "Available");
-            }
-          });
-        });
-    }
-
-    update();
-    setInterval(function () {
-      update();
-    }, 5000);
-  });
+<script src="/static/util.js"></script>
+<script src="/static/status.js">
 </script>
 {% endblock %}

@@ -1,6 +1,7 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response, send_from_directory
 import getstatus
 import db
+import json
 from datetime import datetime
 
 app = Flask(__name__)
@@ -8,15 +9,61 @@ db = db.LaundryDb()
 
 STATUS = ["none", "wash", "dry", "both"]
 
+@app.route('/webpush-sw.js')
+def sw():
+    response=make_response(
+        send_from_directory('static','webpush-sw.js'))
+    #change the content header file. Can also omit; flask will handle correctly.
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
 
 @app.route("/")
 def hello():
+    names = db.getNames()
+    names.reverse()
+    print(names)
     return render_template(
         "laundry.html",
-        names=["Fourth Floor", "Third Floor", "Second Floor", "Basement"],
+        names=names,
         weekday=int(datetime.today().strftime("%w")),
     )
 
+@app.route('/favicon.ico')
+def favicon():
+    response=make_response(send_from_directory('static','favicon.ico'))
+
+    response.headers['Content-Type'] = 'image/vnd.microsoft.icon'
+    return response
+
+@app.route("/icons/<path:path>")
+def getIcon(path):
+    return send_from_directory('static/icons',path)
+
+@app.route("/subscription",methods = ['POST'])
+def subscribe():
+    if request.method == 'POST':
+        data = request.get_json()
+
+        ep = data['subscription']['endpoint']
+        sub = json.dumps(data['subscription'])
+        loc = data['machine']
+
+        db.insertSubscription(ep,loc,sub)
+        return "!"
+    return "?"
+
+@app.route("/check-subscription")
+def check_subscription(endpoint=""):
+    endpoint = request.args.get("url", "", type=str)
+    sub = db.checkSubscription(endpoint)
+    return jsonify(sub)
+
+@app.route("/unsubscribe")
+def unsubscribe():
+    endpoint = request.args.get("url","", type=str)
+    location = request.args.get("location","", type=str)
+    db.deleteSubscription(endpoint,location)
+    return "{}"
 
 @app.route("/status")
 def status():
@@ -41,6 +88,7 @@ def status_json_v2():
             "dry": line[1] in ("dry", "both"),
             "time": line[2],
             "last_seen": line[3],
+            "location": line[4],
         }
         for line in db.getLatest()
     ]

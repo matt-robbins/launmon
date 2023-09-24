@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance to serve the laundry monitor
+After=network.target
+
+[Service]
+User=launy
+Group=www-data
+WorkingDirectory=/home/launy/code/launmon
+Environment="PATH=/home/launy/code/launmon/env/bin"
+ExecStart=/home/launy/code/launmon/env/bin/uwsgi --ini laundrymon.ini
+
+[Install]
+WantedBy=multi-user.target

@@ -7,7 +7,9 @@ from functools import lru_cache
 import os
 import sys
 import db
-from subprocess import Popen
+from multiprocessing import Process
+import webpush
+import json
 
 UDP_IP = "0.0.0.0"
 
@@ -104,16 +106,8 @@ class SocketReader:
         self.db.addEvent(machine, status, datetime.datetime.utcnow())
 
         if status == "none":
-            hook_path = os.getenv("LAUNMON_NOTIF_HOOK", "./notifyhook.sh")
-            Popen(
-                [hook_path],
-                shell=True,
-                stdin=None,
-                stdout=None,
-                stderr=None,
-                close_fds=True,
-            )
-
+            webpush.push(self.db,machine)
+            
     def __init__(self, nlocations, base_port):
         try:
             os.mkdir(STATUS_PATH)
