@@ -1,14 +1,8 @@
+from SignalProcessor import State, SignalProcessor
 import sys
-from enum import Enum
-
-class State(Enum):
-    NONE = 0
-    WASH = 1
-    DRY = 2
-    BOTH = 3
 
 # "Expert System" classifier for laundry status given current.
-class HeuristicSignalProcessor:
+class HeuristicSignalProcessor(SignalProcessor):
     def __init__(self, spike_max=200, wash_th=60, dry_th=700, idle_time=16,both_idle_time=30,cal=1.0):
         self.spike_max = spike_max
         self.wash_th = wash_th

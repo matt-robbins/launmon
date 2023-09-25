@@ -3,70 +3,16 @@ import numpy as np
 import socket
 import select
 import datetime
-from functools import lru_cache
 import os
 import sys
 import db
-from multiprocessing import Process
 import webpush
-import json
+from HeuristicSignalProcessor import HeuristicSignalProcessor
+from HistogramSignalProcessor import HistogramSignalProcessor
 
 UDP_IP = "0.0.0.0"
 
 STATUS_PATH = "/tmp/laundrystatus"
-
-
-class SignalProcessor:
-    def __init__(self, N, oN, cal=1.0):
-        self.N = N
-        self.oN = oN
-        self.cal = cal
-        self.x = np.zeros((N, 1))
-        self.ix = 0
-        self.oix = -1
-        self.state = "none"
-        self.old_state = "???"
-
-    def process_sample(self, sample, only_diff=True):
-        self.x[self.ix] = sample * self.cal
-        # circular buffer index update
-        self.ix = self.ix + 1 if (self.ix < self.N - 1) else 0
-        self.oix = self.oix + 1 if (self.oix < self.oN - 1) else 0
-        if self.oix != 0:
-            return None
-
-        self.state = self.buffer_classify(self.x)
-        if only_diff and (self.state == self.old_state):
-            return None
-
-        if self.old_state == "???":
-            self.old_state = self.state
-            return None
-
-        self.old_state = self.state
-
-        return self.state
-
-    @lru_cache
-    def get_training_histograms(self):
-        files = os.listdir("data")
-        ret = []
-        for f in files:
-            label = f.split("_")[0]
-            ret.append({"hist": gs.file2hist("data/%s" % f), "label": label})
-
-        return ret
-
-    def buffer_classify(self, buf):
-        hs = gs.hist(buf)
-        model = self.get_training_histograms()
-
-        scores = [gs.compare(m["hist"], hs) for m in model]
-        maxix = np.argmax(np.array(scores))
-        label = [m["label"] for m in model][maxix]
-
-        return label
-
 
 class SocketReader:
     def sanitize_data(self, data):
@@ -95,7 +41,7 @@ class SocketReader:
                     continue
 
                 print("machine %s changed state: %s" % (machine, status))
-                self.setstatus(machine, status)
+                self.setstatus(machine, status.name.lower())
 
     def setstatus(self, machine, status):
         try:
@@ -139,7 +85,7 @@ class SocketReader:
             sock.bind((UDP_IP, port))
             self.ports.append(port)
             self.sockets.append(sock)
-            self.processors.append(SignalProcessor(100, 50, cals[i]))
+            self.processors.append(HeuristicSignalProcessor(cal=cals[i]))
             self.machines.append(str(i + 1))
 
 
