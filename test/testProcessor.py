@@ -21,7 +21,7 @@ class TestProcessor(unittest.TestCase):
 
             with open(os.path.join(dir,file)) as f:
                 self.p.reset()
-                self.p.cal = 1.1
+                self.p.cal = 0.8
                 for line in f:
                     ns = self.p.process_sample(float(line))
                     c += 1
@@ -31,5 +31,5 @@ class TestProcessor(unittest.TestCase):
                     if (s == ds):
                         n += 1
             
-            self.assertTrue(n > 0.90*c)
-            self.assertTrue(t < 4)
+            self.assertTrue(n > 0.95*c)
+            self.assertTrue(t < 3)
