@@ -180,7 +180,7 @@ class LaundryDb:
         SELECT location,current,strftime('%H:%M:%S',time) 
             FROM rawcurrent 
             WHERE time > datetime(:start, '-' || :pad || ' seconds')
-            AND time < datetime(:end, '+' || :pad || ' seconds')
+            AND time < COALESCE(datetime(:end, '+' || :pad || ' seconds'), datetime('now'))
             AND location = :loc
         """
         return self.fetch(sqlt, {"start": start, "end": end, "loc": location, "pad": pad})
