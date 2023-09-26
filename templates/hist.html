@@ -138,7 +138,7 @@
             var scale = hours*36000;
 
             var colors = {'none':'white','wash':'yellow','dry':'green','both':'red'}
-            for (var i = 0; i < data.start.length-1; i++){
+            for (var i = 0; i < data.start.length; i++){
                 var ev = document.createElement('div');
                 history.append(ev);
 
@@ -153,7 +153,7 @@
                 ev.id = "event"+i;
                 ev.classList = ['history_item']
                 ev.style.position = "absolute"
-                ev.style.left = 100-((dn-de)/scale)+'%';
+                ev.style.left = 100-((dn-ds)/scale)+'%';
                 ev.style.width = ((de-ds)/scale)+'%';
                 ev.style.height = '90%';
                 ev.style.top = '0px';

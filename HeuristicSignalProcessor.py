@@ -51,6 +51,9 @@ class HeuristicSignalProcessor(SignalProcessor):
                 new_state = State.DRY
 
         elif (self.state == State.DRY): # DRY
+            if (sample < self.dry_min):
+                self.dry_min = sample
+
             self.dry_time += 1
             if sample < self.dry_th:
                 new_state = State.NONE
@@ -82,8 +85,8 @@ class HeuristicSignalProcessor(SignalProcessor):
             self.state = new_state
             if (new_state) == State.DRY:
                 self.dry_time = 0
-            if (new_state == State.BOTH):
                 self.dry_min = sample
+            if (new_state == State.BOTH):
                 self.both_idle_count = 0
             return new_state
         

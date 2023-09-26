@@ -105,7 +105,7 @@ class LaundryDb:
 
         b = [0 for ix in range(24)]
         for bin, val in d:
-            b[bin] = val
+            b[bin] = min(val,1)
 
         return b
 
@@ -175,15 +175,15 @@ class LaundryDb:
             (-minutes, location),
         )
 
-    def getCurrentRange(self, location="1", start="", end=""):
+    def getCurrentRange(self, location="1", start="", end="", pad=10):
         sqlt = """
         SELECT location,current,strftime('%H:%M:%S',time) 
             FROM rawcurrent 
-            WHERE time > ?
-            AND time < ?
-            AND location = ?
+            WHERE time > datetime(:start, '-' || :pad || ' seconds')
+            AND time < datetime(:end, '+' || :pad || ' seconds')
+            AND location = :loc
         """
-        return self.fetch(sqlt, (start, end, location))
+        return self.fetch(sqlt, {"start": start, "end": end, "loc": location, "pad": pad})
     
     def getName(self,location="1"):
         sqlt = """
