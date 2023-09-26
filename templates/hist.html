@@ -148,6 +148,10 @@
                 de = new Date(data.end[i]+"Z").getTime()
                 dn = new Date().getTime()
 
+                if (!de) {
+                    de = dn
+                }
+
                 console.log((dn-ds)/1000)
 
                 ev.id = "event"+i;
