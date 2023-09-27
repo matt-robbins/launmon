@@ -58,6 +58,14 @@ $(function () {
         update();
     }, 5000);
 
+    ws = new WebSocket("wss://laundry.375lincoln.nyc/websocket")
+    ws.addEventListener("message", (event) => {
+        e = JSON.parse(event.data)
+        if (e.status) {
+            update();
+        }
+    });
+
     console.log(window.subscriptionEndpoint)
     // set up callbacks for subscribe buttons
     for (fl = 1; fl < 5; fl++) {
