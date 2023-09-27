@@ -3,7 +3,8 @@ import sys
 
 # "Expert System" classifier for laundry status given current.
 class HeuristicSignalProcessor(SignalProcessor):
-    def __init__(self, spike_max=200, wash_th=60, dry_th=700, idle_time=16,both_idle_time=30,cal=1.0):
+    def __init__(self, 
+        spike_max=200, wash_th=60, dry_th=700, idle_time=16,both_idle_time=30,cal=1.0):
         self.spike_max = spike_max
         self.wash_th = wash_th
         self.dry_th = dry_th

@@ -1,6 +1,6 @@
 import unittest
 from HeuristicSignalProcessor import State, HeuristicSignalProcessor
-from HistogramSignalProcessor import HistogramSignalProcessor
+#from HistogramSignalProcessor import HistogramSignalProcessor
 import os
 
 class TestProcessor(unittest.TestCase):
