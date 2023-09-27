@@ -36,6 +36,7 @@ class HeuristicSignalProcessor(SignalProcessor):
         self.prev_sample = sample
 
         new_state = self.state
+        diff = sample - self.prev_sample
 
         # keep track of how long we've been under the wash threshold
         self.null_count = self.null_count + 1 if sample < self.wash_th else 0
@@ -47,22 +48,23 @@ class HeuristicSignalProcessor(SignalProcessor):
                 new_state = State.WASH
     
         elif (self.state == State.WASH): # WASH
-            if (spike > self.dry_th and self.spike_count < 3):
-                new_state = State.DRY
+            if (spike > self.dry_th and self.spike_count <= 3):
+                new_state = State.BOTH
+            if (diff > self.dry_th):
+                print("setting state to BOTH because of big diff")
+                new_state = State.BOTH
 
         elif (self.state == State.DRY): # DRY
-            if (sample < self.dry_min):
-                self.dry_min = sample
-
+                
             self.dry_time += 1
             if sample < self.dry_th:
                 new_state = State.NONE
+            elif sample < self.dry_min:
+                self.dry_min = sample
             elif spike > self.wash_th and spike < self.spike_max and self.dry_time > 10:
                 new_state = State.BOTH
             
-        elif (self.state == State.BOTH): # BOTH
-            if (sample < self.dry_min):
-                self.dry_min = sample
+        elif (self.state == State.BOTH): # BOTH                
 
             if (sample < (self.dry_min + self.wash_th)):
                 self.both_idle_count += 1
@@ -72,10 +74,13 @@ class HeuristicSignalProcessor(SignalProcessor):
             if (self.both_idle_count > self.both_idle_time):
                 new_state = State.DRY
 
-            if (sample < self.dry_th):
-                new_state = State.WASH
             if (sample < self.wash_th):
                 new_state = State.NONE
+            elif (sample < self.dry_th):
+                new_state = State.WASH
+            elif (sample < self.dry_min):
+                self.dry_min = sample
+           
                 
         # regardless of current state, reset to null if we time out on low current
         if (self.null_count >= self.idle_time and self.state != 0):
