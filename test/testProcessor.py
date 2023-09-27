@@ -6,7 +6,6 @@ import os
 class TestProcessor(unittest.TestCase):
     def setUp(self):
         self.p = HeuristicSignalProcessor(cal=0)    
-        self.p = HistogramSignalProcessor()
     
 
     def test_files(self):
@@ -32,6 +31,6 @@ class TestProcessor(unittest.TestCase):
                         t += 1
                     if (s == ds):
                         n += 1
-            print(n,c)
-            self.assertTrue(n > 0.7*c)
+
+            self.assertTrue(n > 0.9*c)
             self.assertTrue(t < 3)
