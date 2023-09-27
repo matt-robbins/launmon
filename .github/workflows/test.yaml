@@ -26,7 +26,7 @@ jobs:
           pip install -r dev-requirements.txt
       - name: Lint with ruff
         run: |
-          ruff --output-format=github --exclude=env .
+          ruff check --format=github --target-version=py38 --exclude=env .
       - name: Test with pytest
         run: |
           python -m unittest test/*.py
