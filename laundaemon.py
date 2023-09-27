@@ -5,6 +5,7 @@ import os
 import sys
 import db
 import webpush
+from redis import Redis
 from HeuristicSignalProcessor import HeuristicSignalProcessor
 
 UDP_IP = "0.0.0.0"
@@ -14,6 +15,13 @@ STATUS_PATH = "/tmp/laundrystatus"
 class SocketReader:
     def sanitize_data(self, data):
         return float(data.strip())
+    
+    def publish(self, channel,data):
+        try:
+            self.r.publish(channel,data)
+        except:
+            print ("failed to publish data")
+            pass
 
     def run(self):
         while True:
@@ -29,6 +37,7 @@ class SocketReader:
                     continue
                 machine = self.machines[ix]
 
+                self.publish("current:"+machine,sanitized)
                 self.db.addCurrentReading(
                     machine, sanitized, datetime.datetime.utcnow()
                 )
@@ -40,6 +49,7 @@ class SocketReader:
                 print("machine %s changed state: %s" % (machine, status))
                 self.setstatus(machine, status.name.lower())
 
+
     def setstatus(self, machine, status):
         try:
             os.symlink(STATUS_PATH + "/" + status, STATUS_PATH + "/tmp")
@@ -47,6 +57,7 @@ class SocketReader:
         except FileExistsError:
             pass
         self.db.addEvent(machine, status, datetime.datetime.utcnow())
+        self.publish("status:"+machine, status)
 
         if status == "none":
             webpush.push(self.db,machine)
@@ -71,6 +82,7 @@ class SocketReader:
             cals = [1.0, 1.0, 1.0, 1.0]
 
         self.db = db.LaundryDb()
+        self.r = Redis()
 
         self.sockets = []
         self.processors = []
