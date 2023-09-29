@@ -91,7 +91,7 @@ class LaundryDb:
         sqlt = "SELECT calibration FROM calibration WHERE location = ?;"
         return self.fetch(sqlt, (location,))
 
-    def getHist(self, location="1", weekday=0):
+    def getHist(self, location="1", weekday=0, tzoff=0):
         sqlt = """SELECT 
             cast(strftime('%H',datetime(time, :tzoff || ' hour')) as INT) hour, 
             count(*)/12. perhour 
@@ -101,7 +101,8 @@ class LaundryDb:
             AND location=:loc
             GROUP BY hour;"""
 
-        d = self.fetch(sqlt, {"tzoff": "-5", "wkday": weekday, "loc": location})
+        print("tzoff = %d" % (tzoff,))
+        d = self.fetch(sqlt, {"tzoff": "-%d" % (tzoff,), "wkday": weekday, "loc": location})
 
         b = [0 for ix in range(24)]
         for bin, val in d:
@@ -140,7 +141,8 @@ class LaundryDb:
                         (lag(status) OVER (ORDER BY time) || status) 
                             IN ('washnone','bothnone','bothdry','washdry') cend
                     FROM events 
-                    WHERE location = ? AND time > datetime('now', ? || ' hours')) 
+                    WHERE location = ? AND time > 
+                    datetime('now', ? || ' hours')) 
                 WHERE cstart > 0 OR cend > 0)
             WHERE cstart > 0
         """
@@ -156,7 +158,8 @@ class LaundryDb:
                         (lag(status) OVER (ORDER BY time) || status) 
                             IN ('drynone','bothnone','bothwash','drywash') cend
                     FROM events 
-                    WHERE location = ? AND time > datetime('now', ? || ' hours')) 
+                    WHERE location = ? AND time > 
+                    datetime('now', ? || ' hours')) 
                 WHERE cstart > 0 OR cend > 0)
             WHERE cstart > 0
         """

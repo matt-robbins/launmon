@@ -97,18 +97,20 @@ def status_json_v2():
 
 
 @app.route("/histogram")
-def histogram(location="4", weekday=0):
+def histogram():
     location = request.args.get("location", "4", type=str)
     weekday = request.args.get("weekday", "0", type=str)
-    hist = db.getHist(location, weekday)
+    tzoff = request.args.get("tzoff", 0, type=int)
+    hist = db.getHist(location, weekday, tzoff)
     return render_template("hist.html", hist=hist, location=location, day=weekday)
 
 
 @app.route("/histogram-json")
 def histogram_json():
     location = request.args.get("location", "4", type=str)
-    weekday = request.args.get("location", "0", type=str)
-    hist = db.getHist(location, weekday)
+    weekday = request.args.get("weekday", "0", type=str)
+    tzoff = request.args.get("tzoff", "0", type=int)
+    hist = db.getHist(location, weekday, tzoff)
     return jsonify(hist)
 
 
@@ -130,8 +132,12 @@ def cycles_json():
         ev = db.getWashCycles(location, hours)
     else:
         ev = db.getDryCycles(location, hours)
-    dict = {"start": [e[0] for e in ev], "end": [e[1] for e in ev]}
-    return jsonify(dict)
+
+    events = []
+    for e in ev:
+        events.append({"start": e[0],"end": e[1]})
+
+    return jsonify(events)
 
 
 @app.route("/rawcurrent-json")

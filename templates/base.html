@@ -108,12 +108,15 @@
         stroke: var(--color-available);
       }
     </style>
+    {% block extracss %}{% endblock %}
+
     <title>{% block title %} {% endblock %}</title>
   </head>
   <body>
     <nav class="navbar navbar-expand-md navbar-light bg-light ml-2">
       <div class="container-fluid">
-        <a class="navbar-brand pl-2" href="">Laundry</a>
+        <a class="navbar-brand pl-2" href="/">Laundry</a>
+        <a class="navbar-expand-md" href="/histogram">Details</a>
       </div>
     </nav>
 
@@ -134,6 +137,8 @@
       integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" 
       crossorigin="anonymous">
     </script>
+    {% block extrascripts %}{% endblock %}
+
     <script>
       $SCRIPT_ROOT = {{ request.script_root|tojson }};
     </script>

@@ -1,186 +1,186 @@
-<html>
-   <head>
-    <style>
+{% extends 'base.html' %} 
 
-    html, body {
-        height: 100%;
-    }
-    body {
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-    }
-    #root {
-        width: 100%
-    }
-    .container {
-        display: flex;
-        align-items: flex-end;
-        flex: 1 1 40px;
-        justify-content: center;
-        background-color: rgb(241, 241, 241);
-    }
+{% block extracss %}
+    <link rel="stylesheet" href="/static/histogram.css">
+    <link rel="stylesheet" href="/static/timeline.css">
+{% endblock %}
 
-    .menu {
-        display: flex;
-    }
-    .hour {
-        flex: 1 1 40px;
-        background-color:aqua;
-        border-radius: 3px;
-        padding: 1px;
-        margin: 1px;
-    }
+{% block extrascripts %}
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js" charset="utf-8"></script>
+{% endblock %}
 
-    .history {
-        flex: 0 0 30px;
-        /*height:20px;*/
-        width:100%;
-        background-color: oldlace;
-        padding:2px;
-        position:relative;
-    }
-    .history_item {
-        position: absolute;
-        background-color: green;
-    }
-    .history_item:hover {
-        background-color: lightgreen;
-    }
-    </style>
-
-    <script src="https://cdn.plot.ly/plotly-2.16.1.min.js"></script>
-   </head>
-   <body>
+{% block content %}
+<div class="page">
     <div class="menu">
-        <select>
-            <option value="0" id="sun">Sunday</option>
-            <option value="1" id="mon">Monday</option>
-            <option value="2" id="tue">Tuesday</option>
-            <option value="3" id="wed">Wednesday</option>
-            <option value="4" id="thu">Thursday</option>
-            <option value="5" id="fri">Friday</option>
-            <option value="6" id="sat">Saturday</option>
+        <select id="day_select" class="form-select">
+            <option value="0" id="sun" {% if day=="0" %}selected{% endif %} >Sunday</option>
+            <option value="1" id="mon" {% if day=="1" %}selected{% endif %} >Monday</option>
+            <option value="2" id="tue" {% if day=="2" %}selected{% endif %} >Tuesday</option>
+            <option value="3" id="wed" {% if day=="3" %}selected{% endif %} >Wednesday</option>
+            <option value="4" id="thu" {% if day=="4" %}selected{% endif %} >Thursday</option>
+            <option value="5" id="fri" {% if day=="5" %}selected{% endif %} >Friday</option>
+            <option value="6" id="sat" {% if day=="6" %}selected{% endif %} >Saturday</option>
         </select>
-        <select>
-            <option value="1">Basement</option>
-            <option value="2">Second Floor</option>
-            <option value="3">Third Floor</option>
-            <option value="4">Fourth Floor</option>
+        <select id="loc_select" class="form-select">
+            <option value="4" {% if location=="4" %}selected{% endif %}>Fourth Floor</option>
+            <option value="3" {% if location=="3" %}selected{% endif %}>Third Floor</option>
+            <option value="2" {% if location=="2" %}selected{% endif %}>Second Floor</option>
+            <option value="1" {% if location=="1" %}selected{% endif %}>Basement</option>
         </select>
-
-    </div>
-    <div class="container">
-        {%for i in range(0, 24)%}
-            <div class="hour" id="h{{ i }}" style="height:{{ hist[i]*100 }}%" title="{{ i }}h"></div>
-        {%endfor%}
-    </div>
-    <div id="dry_history" class="history"></div>
-    <div id="wash_history" class="history"></div>
-    <div id="graph">
-
     </div>
 
-    <script>
+    <div id="histogram" class="card container"></div>
+    <div id="realtime" class="realtime-monitor">
+        <canvas id="rtgraph" class="rtgraph" width="600px" height="50px"></canvas>
+    </div>
+    <div id="timeline"></div>
+    <div class="history-container">
+        <div id="wash_history" class="history"></div>
+    </div>
+    <div id="graph" class="graph">
 
-        function ajax(url, fun, parm=null) {
-            var request = new XMLHttpRequest();
-            request.open('GET', url, true);
-            request.onload = function() {
-                if (request.status >= 200 && request.status < 400) {
-                    // Success!
-                    var data = JSON.parse(request.responseText);
-                    fun(data, parm)
-                } else {
-                    // We reached our target server, but it returned an error
-                }
-            };
-            request.send();
-        }
+    </div>
+</div>
 
-        var layout = {
-            title: 'Current Draw Over Time',
-            xaxis: {
-            autorange: true
-            },
+<script src="/static/histogram.js"></script>
+<script src="/static/timeline.js"></script>
+<script>
 
-            yaxis: {
-            range: [0, 2000],
-            autorange: false
-            },
-        };
-        plot = document.getElementById('graph');
-        Plotly.newPlot( plot, [{
-                x: [],
-                y: [] }],
-                layout );
-
-        var hours = 24
-
-        function update() {
-
-            ajax('/rawcurrent-json?minutes=60&location='+{{ location }}, function(data) {
-                 Plotly.update(plot, {'x': [data.time], 'y': [data.current]})
-            })
-        }
-
-        update()
-
-        setInterval(function() {
-            //update()
-        }, 2000);
-
-        function draw_history_items(data,elem,loc) {
-            var history = elem
-            console.log(data)
-            console.log(elem)
-            console.log(loc)
-            var scale = hours*36000;
-
-            var colors = {'none':'white','wash':'yellow','dry':'green','both':'red'}
-            for (var i = 0; i < data.start.length; i++){
-                var ev = document.createElement('div');
-                history.append(ev);
-
-                console.log(data.start[i])
-                console.log(data.end[i])
-                ds = new Date(data.start[i]+"Z").getTime()
-                de = new Date(data.end[i]+"Z").getTime()
-                dn = new Date().getTime()
-
-                if (!de) {
-                    de = dn
-                }
-
-                console.log((dn-ds)/1000)
-
-                ev.id = "event"+i;
-                ev.classList = ['history_item']
-                ev.style.position = "absolute"
-                ev.style.left = 100-((dn-ds)/scale)+'%';
-                ev.style.width = ((de-ds)/scale)+'%';
-                ev.style.height = '90%';
-                ev.style.top = '0px';
-                ev.setAttribute('data-start', data.start[i])
-                ev.setAttribute('data-end', data.end[i])
-                ev.dataset.end=data.end[i]
-
-                console.log(data.start[i])
-                console.log(data.end[i])
-                ev.addEventListener('click', function(ev) {
-                    console.log(ev)
-                    //console.log(this.getAttribute('data-start'))
-                    ajax('/rawcurrent-range-json?location='+{{ location }}+'&start='+this.getAttribute('data-start')+'&end='+this.getAttribute('data-end'), function(data) {
-                        Plotly.update(plot, {'x': [data.time], 'y': [data.current]})
-                    })
-                })
+    function ajax(url, fun, parm=null) {
+        var request = new XMLHttpRequest();
+        request.open('GET', url, true);
+        request.onload = function() {
+            if (request.status >= 200 && request.status < 400) {
+                // Success!
+                var data = JSON.parse(request.responseText);
+                fun(data, parm)
+            } else {
+                // We reached our target server, but it returned an error
             }
+        };
+        request.send();
+    }
+
+    var layout = {
+        title: 'Current Draw Over Time',
+        xaxis: {
+        autorange: true
+        },
+
+        yaxis: {
+        range: [0, 2000],
+        autorange: false
+        },
+    };
+    plot = document.getElementById('graph');
+    Plotly.newPlot( plot, [{
+            x: [],
+            y: [] }],
+            layout );
+
+    var hours = 96
+
+    const c = document.getElementById("rtgraph")
+    const ctx = c.getContext("2d");
+
+    function draw_current(data) {
+        c.width = c.width;
+        for (ix in data.current) {
+            ctx.fillStyle = "green";
+            ctx.fillRect((ix-data.current.length+c.width)*2 + 1,
+                c.height - c.height*(data.current[ix]/2000), 1, c.height);
         }
+    }
 
-        ajax('/cycles-json?type=dry&hours='+hours+'&location='+{{ location }}, draw_history_items, document.getElementById("dry_history"), "{{ location }}")
-        ajax('/cycles-json?type=wash&hours='+hours+'&location='+{{ location }}, draw_history_items, document.getElementById("wash_history"), "{{ location }}")
+    function draw_new_current(curr) {
+        
+        ctx.fillStyle = "green";
+        ctx.globalCompositeOperation = "copy";
+        ctx.drawImage(ctx.canvas,-2, 0);
+        // reset back to normal for subsequent operations.
+        ctx.globalCompositeOperation = "source-over"
+        ctx.fillRect(c.width-1,c.height - c.height*(curr/2000), 1, c.height);
+    }
 
-    </script>
+    function update(loc) {
 
-   </body>
-</html>
+        ajax('/rawcurrent-json?minutes=60&location='+loc, function(data) {
+            Plotly.update(plot, {'x': [data.time], 'y': [data.current]})
+            draw_current(data)
+        })
+    }
+
+    setInterval(function() {
+        //update()
+    }, 2000);
+
+    hist = new HourlyHistogram(document.getElementById("histogram"));
+    dry_tl = new Timeline(document.getElementById("timeline"), 
+        "drywash",duration=96*3600*1000,tracks=2);
+
+    function updatePlot(loc,e) {
+        ajax('/rawcurrent-range-json?location='+loc
+            +'&start='+e.start
+            +'&end='+e.end, function(data) {
+            Plotly.update(plot, {'x': [data.time], 'y': [data.current]})
+        })
+    }
+
+    function reloadWithParams() {
+        tz = new Date().getTimezoneOffset()/60
+        loc = document.getElementById("loc_select").value
+        day = document.getElementById("day_select").value
+        ajax('/histogram-json?weekday='+day+'&location='+loc+'&tzoff='+tz, function(data,h) {
+            h.draw(data)
+        }, hist);
+        update(loc)
+        ajax('/cycles-json?type=dry&hours='+hours
+            +'&location='+loc, function (data,p) {
+                dry_tl.draw(data,track=0, function (e) {
+                    updatePlot(loc,e)
+                });
+            }, loc)
+        ajax('/cycles-json?type=wash&hours='+hours
+            +'&location='+loc, function (data,p) {
+                dry_tl.draw(data,track=1, function (e) {
+                    updatePlot(loc,e)
+                });
+            }, loc)
+    }
+
+    window.addEventListener("load", (event) => {
+        tz = new Date().getTimezoneOffset()/60
+        loc = document.getElementById("loc_select").value
+        day = document.getElementById("day_select").value
+
+        document.getElementById("loc_select").addEventListener("change", (event) => {
+            reloadWithParams()
+        });
+        document.getElementById("day_select").addEventListener("change", (event) => {
+            reloadWithParams()
+        });
+
+        ajax('/histogram-json?weekday='+day+'&location='+loc+'&tzoff='+tz, function(data,h) {
+            h.draw(data)
+        }, hist);
+
+
+        ct = new Date().getTime();
+
+        reloadWithParams()
+
+        ws = new WebSocket("wss://laundry.375lincoln.nyc/websocket")
+        ws.addEventListener("message", (event) => {
+            e = JSON.parse(event.data)
+            if (e.current && e.location == loc) {
+                draw_new_current(e.current)
+                d = new Date().getTime()
+                dry_tl.update(d)
+            }
+        });
+
+    });
+</script>
+
+{% endblock %}
+
