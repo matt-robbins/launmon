@@ -21,7 +21,6 @@ def sw():
 def hello():
     names = db.getNames()
     names.reverse()
-    print(names)
     return render_template(
         "laundry.html",
         names=names,
@@ -144,8 +143,6 @@ def cycles_json():
 def current_json():
     location = request.args.get("location", "3", type=str)
     minutes = request.args.get("minutes", -60, type=int)
-    print(location)
-    print(minutes)
     res = db.getCurrent(location, minutes)
 
     dict = {"time": [c[2] for c in res], "current": [c[1] for c in res]}

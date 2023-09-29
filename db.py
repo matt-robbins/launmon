@@ -101,7 +101,6 @@ class LaundryDb:
             AND location=:loc
             GROUP BY hour;"""
 
-        print("tzoff = %d" % (tzoff,))
         d = self.fetch(sqlt, {"tzoff": "-%d" % (tzoff,), "wkday": weekday, "loc": location})
 
         b = [0 for ix in range(24)]
