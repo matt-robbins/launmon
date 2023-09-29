@@ -118,6 +118,7 @@
     dry_tl = new Timeline(document.getElementById("timeline"), 
         "drywash",duration=96*3600*1000,tracks=2);
 
+    dry_tl.setZoom=4.0
     function updatePlot(loc,e) {
         ajax('/rawcurrent-range-json?location='+loc
             +'&start='+e.start
