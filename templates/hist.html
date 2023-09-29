@@ -131,6 +131,7 @@
         tz = new Date().getTimezoneOffset()/60
         loc = document.getElementById("loc_select").value
         day = document.getElementById("day_select").value
+        dry_tl.reset();
         ajax('/histogram-json?weekday='+day+'&location='+loc+'&tzoff='+tz, function(data,h) {
             h.draw(data)
         }, hist);

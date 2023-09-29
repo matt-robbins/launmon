@@ -104,7 +104,7 @@ class Timeline {
     }
     reset() {
         //this.tape.textContent = "";
-        for (t in this.tracks) {
+        for (var t of this.tracks) {
             t.textContent = '';
         }
         this.scale = this.tape_end - this.tape_start;
