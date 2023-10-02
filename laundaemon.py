@@ -26,6 +26,7 @@ class SocketReader:
     def run(self):
         while True:
             readable, _writable, _except = select.select(self.sockets, [], [])
+            now = datetime.datetime.utcnow()
             for s in readable:
                 data, addr = s.recvfrom(1024)
                 port = s.getsockname()[1]
@@ -37,9 +38,15 @@ class SocketReader:
                     continue
                 machine = self.machines[ix]
 
+                # stick in a nan to make the processor reset
+                if ((now - self.lastseen[ix]).total_seconds() > 10):
+                    sanitized = float('nan')
+
+                self.lastseen[ix] = now
+
                 self.publish("current:"+machine,sanitized)
                 self.db.addCurrentReading(
-                    machine, sanitized, datetime.datetime.utcnow()
+                    machine, sanitized, now
                 )
                 status = self.processors[ix].process_sample(sanitized)
 
@@ -88,6 +95,9 @@ class SocketReader:
         self.processors = []
         self.ports = []
         self.machines = []
+        self.lastseen = []
+        now = datetime.datetime.utcnow()
+
         for i in range(nlocations):
             port = base_port + 1 + i
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -96,6 +106,7 @@ class SocketReader:
             self.sockets.append(sock)
             self.processors.append(HeuristicSignalProcessor(cal=cals[i]))
             self.machines.append(str(i + 1))
+            self.lastseen.append(now)
 
 
 if __name__ == "__main__":
