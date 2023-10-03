@@ -12,6 +12,14 @@
 {% block content %}
 <div class="page">
     <div class="menu">
+        
+        <select id="loc_select" class="form-select">
+            <option value="4" {% if location=="4" %}selected{% endif %}>Fourth Floor</option>
+            <option value="3" {% if location=="3" %}selected{% endif %}>Third Floor</option>
+            <option value="2" {% if location=="2" %}selected{% endif %}>Second Floor</option>
+            <option value="1" {% if location=="1" %}selected{% endif %}>Basement</option>
+        </select>
+
         <select id="day_select" class="form-select">
             <option value="0" id="sun" {% if day=="0" %}selected{% endif %} >Sunday</option>
             <option value="1" id="mon" {% if day=="1" %}selected{% endif %} >Monday</option>
@@ -21,22 +29,22 @@
             <option value="5" id="fri" {% if day=="5" %}selected{% endif %} >Friday</option>
             <option value="6" id="sat" {% if day=="6" %}selected{% endif %} >Saturday</option>
         </select>
-        <select id="loc_select" class="form-select">
-            <option value="4" {% if location=="4" %}selected{% endif %}>Fourth Floor</option>
-            <option value="3" {% if location=="3" %}selected{% endif %}>Third Floor</option>
-            <option value="2" {% if location=="2" %}selected{% endif %}>Second Floor</option>
-            <option value="1" {% if location=="1" %}selected{% endif %}>Basement</option>
-        </select>
+
     </div>
 
     <div id="histogram" class="card container"></div>
     <div id="realtime" class="realtime-monitor">
         <canvas id="rtgraph" class="rtgraph" width="600px" height="50px"></canvas>
     </div>
-    <div id="timeline"></div>
-    <div class="history-container">
-        <div id="wash_history" class="history"></div>
+    <div id="timeline-container">
+        <div id="timeline"></div>
+        <div id="timeline-buttons">
+            <button type="button" class="btn btn-secondary btn-sm" id="timeline-zin">+</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="timeline-zout">-</button>
+        </div>
     </div>
+    
+    
     <div id="graph" class="graph">
 
     </div>
@@ -119,6 +127,9 @@
         "drywash",duration=96*3600*1000,tracks=2);
 
     dry_tl.setZoom=4.0
+    dry_tl.zoomInButton = document.getElementById("timeline-zin");
+    dry_tl.zoomOutButton = document.getElementById("timeline-zout");
+
     function updatePlot(loc,e) {
         ajax('/rawcurrent-range-json?location='+loc
             +'&start='+e.start

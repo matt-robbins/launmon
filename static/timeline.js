@@ -96,10 +96,28 @@ class Timeline {
         this.tape.style.width=this.zoom*100+"%";
         //this.tape.style.left=-(this.zoom-1)*100*this.zoom_center+"%";
     }
+
+    set zoomInButton(div) {
+        div.timelineObject=this;
+        div.addEventListener('click', function(ev,tl) {
+            this.timelineObject.setZoom = this.timelineObject.zoom * 2;
+        }, this);
+    }
+
+    set zoomOutButton(div) {
+        div.timelineObject=this;
+        div.addEventListener('click', function(ev,tl) {
+            this.timelineObject.setZoom = this.timelineObject.zoom / 2;
+        }, this);
+    }
+
     set setZoom(val) {
         console.log("zoom set!");
         this.zoom = val;
         this.zoom_update();
+    }
+    get getZoom() {
+        return this.zoom;
     }
     set setHead(val) {
         this.head = val
