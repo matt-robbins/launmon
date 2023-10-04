@@ -115,6 +115,7 @@ window.addEventListener("load", (event) => {
     document.getElementById("loc_select").addEventListener("change", (event) => {
         reloadHistogram();
         reloadTimeline();
+        updatePlot(loc);
     });
     document.getElementById("day_select").addEventListener("change", (event) => {
         reloadHistogram();
