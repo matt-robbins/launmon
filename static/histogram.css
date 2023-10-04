@@ -2,6 +2,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 90%;
+    gap: 1em;
 }
 #root {
     width: 100%
@@ -11,13 +13,23 @@
     flex: 0 0 200px;
     justify-content: center;
     background-color: white;
+    position: relative;
 }
 
 .menu {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start;
+    align-items: center;
     width: 100%;
+    position: absolute;
+    top: 0.5em;
+}
+#day_select {
+    flex: 0 0 10em;
+}
+#loc_select {
+    flex: 0 0 10em;
 }
 .graph {
     flex: 0 0 500px;
@@ -64,7 +76,7 @@
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    border-style: solid;
+    flex: 1 1 auto;
 }
 .histogram-histogram {
     display: flex;
@@ -117,13 +129,15 @@
     background-color: azure;
 }
 .realtime-monitor {
-    flex: 0 0 10px;
+    flex: 0 0 5em;
     width:90%;
+    overflow-y:scroll;
 }
-.rtgraph {
-    height:100px;
-    width:100%;
+#rtdata-text {
+    font-family: monospace;
+    font-size: xx-small;
 }
+
 
 #timeline-container {
     display: flex;

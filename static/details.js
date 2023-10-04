@@ -1,80 +1,152 @@
-function ajax(url, fun, parm=null) {
-    var request = new XMLHttpRequest();
-    request.open('GET', url, true);
-    request.onload = function() {
-        if (request.status >= 200 && request.status < 400) {
-            // Success!
-            var data = JSON.parse(request.responseText);
-            fun(data, parm)
-        } else {
-            // We reached our target server, but it returned an error
-        }
-    };
-    request.send();
-}
 
-var layout = {
-    title: 'Current Draw Over Time',
-    xaxis: {
-    autorange: true
-    },
+var hours = 96
 
-    yaxis: {
-    range: [0, 2000],
-    autorange: false
-    },
-};
-plot = document.getElementById('graph');
-Plotly.newPlot( plot, [{
-        x: [],
-        y: [] }],
-        layout );
+hist = new HourlyHistogram(document.getElementById("histogram"));
+dry_tl = new Timeline(document.getElementById("timeline"), 
+    "drywash",duration=96*3600*1000,tracks=2);
 
-var hours = 24
+dry_tl.setZoom=16.0
+dry_tl.zoomInButton = document.getElementById("timeline-zin");
+dry_tl.zoomOutButton = document.getElementById("timeline-zout");
 
-function draw_history_items(data,elem,loc) {
-    var history = elem
-    console.log(data)
-    console.log(elem)
-    console.log(loc)
-    var scale = hours*36000;
+chart = new Chart(document.getElementById("graph-canvas"), {});
+chart.realtime = false;
 
-    var colors = {'none':'white','wash':'yellow','dry':'green','both':'red'}
-    for (var i = 0; i < data.start.length-1; i++){
-        var ev = document.createElement('div');
-        history.append(ev);
-
-        console.log(data.start[i])
-        console.log(data.end[i])
-        ds = new Date(data.start[i]+"Z").getTime()
-        de = new Date(data.end[i]+"Z").getTime()
-        dn = new Date().getTime()
-
-        if (!de) {
-            de = dn
-        }
-
-        console.log((dn-ds)/1000)
-
-        ev.id = "event"+i;
-        ev.classList = ['history_item']
-        ev.style.position = "absolute"
-        ev.style.left = 100-((dn-de)/scale)+'%';
-        ev.style.width = ((de-ds)/scale)+'%';
-        ev.style.height = '90%';
-        ev.style.top = '0px';
-        ev.setAttribute('data-start', data.start[i])
-        ev.setAttribute('data-end', data.end[i])
-        ev.dataset.end=data.end[i]
-
-        console.log(data.start[i])
-        console.log(data.end[i])
-        ev.addEventListener('click', function(ev) {
-            console.log(ev)
-            //console.log(this.getAttribute('data-start'))
-            ajax('/rawcurrent-range-json?location='+loc+'&start='+this.getAttribute('data-start')+'&end='+this.getAttribute('data-end'), function(data) {
-                Plotly.update(plot, {'x': [data.time], 'y': [data.current]})
-            })
-        })
+async function updatePlot(loc,e) {
+    var url = '';
+    var realtime = false;
+    if (e) {
+        url = '/rawcurrent-range-json?location='+loc+'&start='+e.start+'&end='+e.end;
     }
+    else {
+        realtime=true;
+        url = '/rawcurrent-json?location='+loc+'&minutes='+30;
+    }
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    t = document.getElementById("rtdata-text");
+    t.innerText = data.current.join("\n");
+
+    chart.destroy();
+
+    chart = new Chart(document.getElementById("graph-canvas"), {
+        type: 'line',
+        data: {
+            labels: data.time.map((x) => new Date(x+"Z").getTime()),
+            datasets: [{
+                label: 'Current (units)',
+                data: data.current,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+            y: {
+                beginAtZero: true
+            },
+            x: {
+                type: "time"
+            }
+            },
+            animation: false
+        }
+    });
+    chart.realtime = realtime;
 }
+
+function addData(chart,time,current) {
+
+    if (!chart.realtime){
+        return;
+    }
+    chart.data.labels.shift();
+    chart.data.labels.push(time);
+    chart.data.datasets[0].data.shift();
+    chart.data.datasets[0].data.push(current);
+
+    var t = document.getElementById("rtdata-text");
+    t.innerText = chart.data.datasets[0].data.join("\n");
+
+    var term = document.getElementById("realtime");
+    term.scrollTo(0,term.scrollHeight);
+    chart.update();
+}
+
+async function reloadHistogram() {
+    tz = new Date().getTimezoneOffset()/60
+    loc = document.getElementById("loc_select").value
+    day = document.getElementById("day_select").value
+
+    const url = '/histogram-json?weekday='+day+'&location='+loc+'&tzoff='+tz;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    hist.draw(data);
+}
+
+function reloadTimeline() {
+    dry_tl.reset();
+    reloadTimelineTrack('dry',0);
+    reloadTimelineTrack('wash',1);
+}
+
+async function reloadTimelineTrack(name='dry',number=0) {
+    loc = document.getElementById("loc_select").value;
+
+    var url = '/cycles-json?type='+name+'&hours='+hours+'&location='+loc;
+    var response = await fetch(url);
+    var data = await response.json();
+
+    dry_tl.draw(data,track=number, function (e) {
+        updatePlot(loc,e);
+    });
+}
+
+window.addEventListener("load", (event) => {
+    tz = new Date().getTimezoneOffset()/60;
+    dow = new Date().getDay();
+    loc = document.getElementById("loc_select").value
+    document.getElementById("day_select").value = dow;
+    
+    day = document.getElementById("day_select").value;
+
+    document.getElementById("loc_select").addEventListener("change", (event) => {
+        reloadHistogram();
+        reloadTimeline();
+    });
+    document.getElementById("day_select").addEventListener("change", (event) => {
+        reloadHistogram();
+    });
+
+    for (var tk of document.getElementsByClassName("timeline-track")) {
+        tk.addEventListener("click", (ev) => {
+            if (ev.target.classList.contains("timeline-event")) {
+                return;
+            }
+            updatePlot(loc);
+        });
+    }
+
+    reloadHistogram();
+    reloadTimeline();
+
+    updatePlot(loc);
+
+    ws = new WebSocket("wss://laundry.375lincoln.nyc/websocket")
+    ws.addEventListener("message", (event) => {
+        
+        e = JSON.parse(event.data)
+        if (e.current && e.location == loc) {
+            
+            d = new Date().getTime();
+            addData(chart,d,e.current);
+            dry_tl.update(d);
+        }
+        if (e.event && e.location == loc) {
+            reloadTimeline();
+        }
+    });
+
+});

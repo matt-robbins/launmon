@@ -167,7 +167,7 @@ class LaundryDb:
     def getCurrent(self, location="1", minutes=-60):
         return self.fetch(
             """
-            SELECT location, current, strftime('%H:%M:%S', time) 
+            SELECT location, current, time 
             FROM rawcurrent 
             WHERE time > datetime(
                 (SELECT max(time) FROM rawcurrent), ? || ' minutes'
@@ -179,7 +179,7 @@ class LaundryDb:
 
     def getCurrentRange(self, location="1", start="", end="", pad=10):
         sqlt = """
-        SELECT location,current,strftime('%H:%M:%S',time) 
+        SELECT location,current,time
             FROM rawcurrent 
             WHERE time > datetime(:start, '-' || :pad || ' seconds')
             AND time < COALESCE(datetime(:end, '+' || :pad || ' seconds'), datetime('now'))
