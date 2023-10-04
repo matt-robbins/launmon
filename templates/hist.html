@@ -12,7 +12,7 @@
 {% block content %}
 <div class="page">
     <div class="menu">
-        
+
         <select id="loc_select" class="form-select">
             <option value="4" {% if location=="4" %}selected{% endif %}>Fourth Floor</option>
             <option value="3" {% if location=="3" %}selected{% endif %}>Third Floor</option>
@@ -162,8 +162,11 @@
     }
 
     window.addEventListener("load", (event) => {
-        tz = new Date().getTimezoneOffset()/60
+        tz = new Date().getTimezoneOffset()/60;
+        dow = new Date().getDay();
         loc = document.getElementById("loc_select").value
+        document.getElementById("day_select").value = dow;
+        
         day = document.getElementById("day_select").value
 
         document.getElementById("loc_select").addEventListener("change", (event) => {

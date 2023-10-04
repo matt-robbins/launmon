@@ -21,6 +21,7 @@
 }
 .graph {
     flex: 0 0 500px;
+    width: 90%;
 }
 .hour {
     flex: 1 1 40px;

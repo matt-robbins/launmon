@@ -22,6 +22,13 @@ class Timeline {
         this.tape.id = name+"-timeline";
         div.appendChild(this.tape);
 
+        var ruler = document.createElement('div');
+        ruler.classList.add("timeline-ruler");
+        ruler.id = "timeline-ruler";
+        this.tape.append(ruler);
+        
+        this.ruler = ruler;
+
         for (var i = 0; i < tracks; i++){
             var tk = document.createElement('div');
             tk.classList.add("timeline-track");
@@ -38,7 +45,8 @@ class Timeline {
         this.zoom_center = 1;
         this.zoom = 1;
 
-        this.zoom_update()
+        this.zoom_update();
+        this.drawRuler();
         //this.pd = new PinchDetector(div);
     }
 
@@ -81,20 +89,99 @@ class Timeline {
         }
     }
 
+    drawRuler(time) {
+        var now = new Date().getTime();
+        var hour = 3600000;
+        var minute = hour / 60;
+        var day = hour * 24;
+
+        var nearest = Math.floor(now/hour)*hour;
+        var count = Math.floor(this.scale/hour)/this.zoom;
+        console.log("count = "+count);
+        var desired_count = 4;
+
+        var divs = [1,3,4,6,12,24]
+        var divz = 1;
+        for (var ix in divs) {
+            var c = count / divs[ix];
+            if (c >= desired_count) {
+                divz = divs[ix];
+            }
+        }
+
+        this.ruler.innerText = '';
+        var first = nearest;
+        this.ruler.latest = first;
+        this.ruler.update_after = hour;
+
+        while (nearest > this.tape_start) {
+
+            var date = new Date(nearest);
+            var hr = date.getHours();
+
+            var label = document.createElement("div");
+            label.classList.add("timeline-label");
+            var text = document.createElement("p");
+            text.classList.add("timeline-text");
+            var tick = document.createElement("div");
+            tick.classList.add("timeline-tick");
+
+            var ltext = '';
+            if (hr % divz == 0 || nearest == first) {
+                ltext = date.toLocaleTimeString('en-US',{hour:'numeric'});
+                tick.classList.add("long");
+                if (hr == 0) {
+                    ltext = new Intl.DateTimeFormat('en-US').format(date);
+                }
+            }
+            text.innerText = ltext;
+            
+            label.style.left = (100*(nearest-this.tape_start)/(this.tape_end-this.tape_start))+"%";
+
+            label.labelTime = nearest;
+            label.append(text);
+            label.append(tick);
+            this.ruler.append(label);
+            nearest -= hour;
+        }
+    }
+
     update(time) {
         var diff = time - this.tape_end;
         this.tape_end = time;
         this.tape_start = time - this.scale;
         for (var track of this.tape.children) {
             for (var c of track.children) {
-                this.setEventPosition(c)
+                try{
+                    this.setEventPosition(c)
+                }
+                catch {
+
+                }
             }
         }
+        if (time > this.ruler.update_after + this.ruler.latest) {
+            this.drawRuler(time);
+
+            return;
+        }
+
+        for (var lab of document.getElementsByClassName("timeline-label")) {
+            var l = (100*(lab.labelTime-this.tape_start)/this.scale)+"%";
+            if (l < 0) {
+                lab.remove();
+            }
+            else {
+                lab.style.left = l;
+            }
+        }
+        //this.drawRuler();
     }
 
     zoom_update() {
         this.tape.style.width=this.zoom*100+"%";
         //this.tape.style.left=-(this.zoom-1)*100*this.zoom_center+"%";
+        this.drawRuler();
     }
 
     set zoomInButton(div) {
@@ -113,6 +200,7 @@ class Timeline {
 
     set setZoom(val) {
         console.log("zoom set!");
+        if (val < 1) val = 1;
         this.zoom = val;
         this.zoom_update();
     }
