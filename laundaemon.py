@@ -39,7 +39,7 @@ class SocketReader:
                 machine = self.machines[ix]
 
                 # stick in a nan to make the processor reset
-                if ((now - self.lastseen[ix]).total_seconds() > 10):
+                if ((now - self.lastseen[ix]).total_seconds() > 120):
                     sanitized = float('nan')
 
                 self.lastseen[ix] = now
