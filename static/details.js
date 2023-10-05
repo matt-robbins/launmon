@@ -145,7 +145,7 @@ window.addEventListener("load", (event) => {
             addData(chart,d,e.current);
             dry_tl.update(d);
         }
-        if (e.event && e.location == loc) {
+        if (e.status && e.location == loc) {
             reloadTimeline();
         }
     });
