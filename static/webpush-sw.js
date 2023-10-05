@@ -18,9 +18,9 @@ self.addEventListener('push', function(event) {
 	};
 
 	if (event.data) {
-		const dataText = event.data.text();
-		notificationTitle = dataText+' Laundry Done!';
-		notificationOptions.body = "Get it while it's hot!";
+		const d = JSON.parse(event.data.text());
+		notificationTitle = d.location +' '+ d.message;
+		notificationOptions.body = d.sass;
 	}
     clients.matchAll().then(function(cli){
         console.log("clients: " +cli)

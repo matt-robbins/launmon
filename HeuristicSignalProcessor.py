@@ -50,11 +50,11 @@ class HeuristicSignalProcessor(SignalProcessor):
             spike = self.prev_sample - self.spike_start
             self.spike_start = 0
 
+        diff = sample - self.prev_sample
         self.prev_sample = sample
 
         new_state = self.state
-        diff = sample - self.prev_sample
-
+        
 
         # keep track of how long we've been under the wash threshold
         self.null_count = self.null_count + 1 if sample < self.wash_th else 0
@@ -66,7 +66,7 @@ class HeuristicSignalProcessor(SignalProcessor):
                 new_state = State.WASH
     
         elif (self.state == State.WASH): # WASH
-            if (spike > self.dry_th and self.spike_count <= 3):
+            if (diff > self.dry_th or (spike > self.dry_th and self.spike_count <= 3)):
                 new_state = State.BOTH
                 self.dry_time = 0
             if (self.spike_count > 7 and spike > self.spike_max and self.wash_time > 1200):

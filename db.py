@@ -83,6 +83,10 @@ class LaundryDb:
                 ORDER BY e.location"""
         return self.fetch(sqlt)
 
+    def getLatestStatus(self, location):
+        sqlt = """SELECT status FROM events WHERE location = ? ORDER BY time DESC LIMIT 1;"""
+        return self.fetch(sqlt,(location,))[0][0]
+    
     def getLastSeen(self):
         sqlt = """SELECT location, lastseen FROM locations;"""
         return self.fetch(sqlt)

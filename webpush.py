@@ -4,11 +4,11 @@ from multiprocessing import Process
 import json
 import sys
 
-def push_main(subscription={},name="basement"):
+def push_main(subscription={},data={}):
     try:
         webpush(
             subscription_info=subscription,
-            data=name,
+            data=json.dumps(data),
             vapid_private_key="m1Wni8qP-jjDa0jPaczGSZRsulQHAm5olCv7bXO81Go",
             vapid_claims={
                     "sub": "mailto:matthew.robbins@gmail.com",
@@ -24,16 +24,16 @@ def push_main(subscription={},name="basement"):
                 extra.message
                 )
 
-def push(db, location):
+def push(db, location, message):
     for s in db.getSubscriptions(location):
         sub = json.loads(s[0])
         name = db.getName(location)
 
         # note that we don't explicitly wait() for the process to finish
         # tested and I don't *think* this causes zombies. lol.
-        p = Process(target=push_main,args=(sub,name))
+        p = Process(target=push_main,args=(sub,{"location":name,"message":message, "sass": "Get it!"}))
         p.start()
-        db.deleteSubscription(endpoint=sub['endpoint'],location=location)
+        #db.deleteSubscription(endpoint=sub['endpoint'],location=location)
 
 if __name__ == '__main__':
     d = LaundryDb()

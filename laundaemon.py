@@ -63,11 +63,22 @@ class SocketReader:
             os.rename(STATUS_PATH + "/tmp", STATUS_PATH + "/" + machine)
         except FileExistsError:
             pass
+        oldstatus = self.db.getLatestStatus(machine)
         self.db.addEvent(machine, status, datetime.datetime.utcnow())
         self.publish("status:"+machine, status)
 
-        if status == "none":
-            webpush.push(self.db,machine)
+        trans=oldstatus+status
+        event_text = ""
+        if (trans in ["nonewash", "dryboth"]):
+            event_text = "Washer Started"
+        elif (trans in ["nonedry","washboth"]):
+            event_text = "Dryer Started"
+        elif (trans in ["bothwash","drynone"]):
+            event_text = "Dryer Stopped"
+        elif (trans in ["bothdry","washnone"]):
+            event_text = "Washer Stopped"
+
+        webpush.push(self.db,machine,event_text)
             
     def __init__(self, nlocations, base_port):
         try:

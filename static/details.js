@@ -123,7 +123,11 @@ function startWebsocket(url) {
     ws.onclose = function() {
         // connection closed, discard old websocket and create a new one in 5s
         ws = null
-        setTimeout(function(){ startWebsocket(url)}, 5000);
+        setTimeout(function(){ 
+            startWebsocket(url);
+            reloadTimeline();
+            updatePlot();
+        }, 5000);
     };
 }
 
