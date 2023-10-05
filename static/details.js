@@ -104,6 +104,29 @@ async function reloadTimelineTrack(name='dry',number=0) {
     });
 }
 
+function startWebsocket(url) {
+    var ws = new WebSocket(url);
+  
+    ws.onmessage = function(event) {
+        e = JSON.parse(event.data)
+        if (e.current && e.location == loc) {
+            
+            d = new Date().getTime();
+            addData(chart,d,e.current);
+            dry_tl.update(d);
+        }
+        if (e.status) {
+            reloadTimeline();
+        }
+    };
+  
+    ws.onclose = function() {
+        // connection closed, discard old websocket and create a new one in 5s
+        ws = null
+        setTimeout(function(){ startWebsocket(url)}, 5000);
+    };
+}
+
 window.addEventListener("load", (event) => {
     tz = new Date().getTimezoneOffset()/60;
     dow = new Date().getDay();
@@ -135,19 +158,6 @@ window.addEventListener("load", (event) => {
 
     updatePlot(loc);
 
-    ws = new WebSocket("wss://laundry.375lincoln.nyc/websocket")
-    ws.addEventListener("message", (event) => {
-        
-        e = JSON.parse(event.data)
-        if (e.current && e.location == loc) {
-            
-            d = new Date().getTime();
-            addData(chart,d,e.current);
-            dry_tl.update(d);
-        }
-        if (e.status && e.location == loc) {
-            reloadTimeline();
-        }
-    });
+    startWebsocket("wss://laundry.375lincoln.nyc/websocket");
 
 });
