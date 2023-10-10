@@ -25,10 +25,6 @@ function askPermission() {
         if (permissionResult) {
             permissionResult.then(resolve, reject);
         }
-    }).then(function (permissionResult) {
-        if (permissionResult !== 'granted') {
-        throw new Error("We weren't granted permission.");
-        }
     });
 }
 
@@ -55,7 +51,13 @@ window.subscribe = async (machine=4,unsubscribe=false) => {
         updateSubscriptions()
     })
 
-    askPermission()
+    const perm = await askPermission()
+    if (perm !== 'granted') {
+        alert("Aww, you rejected permissions. " +
+        "This means you'll be unable to recieve push messages.");
+        
+        console.log("we didn't get permission!");
+    }
 
     if (!('pushManager' in registration)) {
         alert("Unable to subscribe to push messages. " +

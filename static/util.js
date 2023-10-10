@@ -24,6 +24,9 @@ function updateSubscriptions() {
     navigator.serviceWorker.getRegistration("/").then((registration) => {
         if (registration) {
         registration.pushManager.getSubscription().then((subscription) => {
+            if (subscription === null) {
+                return;
+            }
             url = "/check-subscription?url="+encodeURIComponent(subscription.endpoint)
             fetch(url)
             .then((resp) => resp.json())

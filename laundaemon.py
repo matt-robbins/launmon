@@ -77,6 +77,8 @@ class SocketReader:
             event_text = "Dryer Stopped"
         elif (trans in ["bothdry","washnone"]):
             event_text = "Washer Stopped"
+        elif (status == "none"):
+            event_text = "stopped"
 
         webpush.push(self.db,machine,event_text)
             
