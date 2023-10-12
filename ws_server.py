@@ -22,7 +22,6 @@ async def show_time():
     while True:
         message = p.get_message()
         if (message is not None):
-            print(message)
             ch, machine = str.split(message['channel'].decode(),':')
             data = message['data'].decode()
             packet = {"location": machine, ch: data}
