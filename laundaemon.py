@@ -65,22 +65,8 @@ class SocketReader:
             pass
         oldstatus = self.db.getLatestStatus(machine)
         self.db.addEvent(machine, status, datetime.datetime.utcnow())
-        self.publish("status:"+machine, status)
-
-        trans=oldstatus+status
-        event_text = ""
-        if (trans in ["nonewash", "dryboth"]):
-            event_text = "Washer Started"
-        elif (trans in ["nonedry","washboth"]):
-            event_text = "Dryer Started"
-        elif (trans in ["bothwash","drynone"]):
-            event_text = "Dryer Stopped"
-        elif (trans in ["bothdry","washnone"]):
-            event_text = "Washer Stopped"
-        elif (status == "none"):
-            event_text = "stopped"
-
-        webpush.push(self.db,machine,event_text)
+        
+        self.publish("status:"+machine, oldstatus+":"+status)
             
     def __init__(self, nlocations, base_port):
         try:

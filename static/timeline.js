@@ -144,6 +144,8 @@ class Timeline {
             this.ruler.append(label);
             nearest -= hour;
         }
+
+        
     }
 
     update(time) {
