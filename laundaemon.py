@@ -4,7 +4,6 @@ import datetime
 import os
 import sys
 import db
-import webpush
 from redis import Redis
 from HeuristicSignalProcessor import HeuristicSignalProcessor
 

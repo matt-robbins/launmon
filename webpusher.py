@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import redis
 import json
-import asyncio
 import db
 from webpush import push_main
 import concurrent.futures
