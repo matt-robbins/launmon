@@ -1,4 +1,5 @@
 from SignalProcessor import State, SignalProcessor
+from SpikeDetector import SpikeDetector
 import sys
 import math
 
@@ -9,6 +10,7 @@ class HeuristicSignalProcessor(SignalProcessor):
         idle_time=16,both_idle_time=30,cal=1.0):
 
         self.spike_max = spike_max
+        self.wash_spike_idle = 0
         self.wash_th = wash_th
         self.wash_time = 0
         self.dry_time = 0
@@ -19,15 +21,14 @@ class HeuristicSignalProcessor(SignalProcessor):
         self.both_idle_count = 0
         self.dry_min = 0
         self.cal = cal
-        self.spike_count = 0
-        self.spike_start = -1
         self.prev_sample = 0
         self.state = State.NONE
-        self.spike_thresh = 10
+        self.spike_det = SpikeDetector(10,wash_th)
         self.count = -1
 
     def reset(self):
         self.__init__()
+        self.spike_det.reset()
 
     def process_sample(self, sample, only_diff=True):
         spike = 0
@@ -40,21 +41,18 @@ class HeuristicSignalProcessor(SignalProcessor):
             else:
                 self.reset()
                 return State.NONE
-            
-        if (sample > self.prev_sample + self.spike_thresh):
-            if (self.spike_start == 0):
-                self.spike_count = 0
-                self.spike_start = self.prev_sample
-            self.spike_count += 1
-        elif (self.spike_start != 0):
-            spike = self.prev_sample - self.spike_start
-            self.spike_start = 0
+
+        spike,spike_count = self.spike_det.process_sample(sample)
+
+        self.wash_spike_idle +=1
+        if (spike > 0 and spike < 300 and (self.dry_time == 0 or self.dry_time > 10)):
+            # print("%d: washy spike! %dx%dx%d" % (self.count,spike,spike_count,self.wash_spike_idle))
+            self.wash_spike_idle = 0
 
         diff = sample - self.prev_sample
         self.prev_sample = sample
 
         new_state = self.state
-        
 
         # keep track of how long we've been under the wash threshold
         self.null_count = self.null_count + 1 if sample < self.wash_th else 0
@@ -66,14 +64,11 @@ class HeuristicSignalProcessor(SignalProcessor):
                 new_state = State.WASH
     
         elif (self.state == State.WASH): # WASH
-            if (diff > self.dry_th or (spike > self.dry_th and self.spike_count <= 3)):
+            if (diff > self.dry_th or (spike > self.dry_th and spike_count <= 3)):
                 new_state = State.BOTH
                 self.dry_time = 0
-            if (self.spike_count > 7 and spike > self.spike_max and self.wash_time > 1200):
-                print("spin cycle?: %d" % (self.count,))
 
         elif (self.state == State.DRY): # DRY
-                
             self.dry_time += 1
             if sample < self.dry_th:
                 new_state = State.NONE
@@ -83,7 +78,11 @@ class HeuristicSignalProcessor(SignalProcessor):
                 new_state = State.BOTH
             
         elif (self.state == State.BOTH): # BOTH    
-            self.dry_time += 1            
+            self.dry_time += 1      
+            # failsafe timeout -- if we don't see any wash-y spikes for 400 seconds, we're not washing
+            if (self.wash_spike_idle > 400):
+                print("WASH SPIKE TIMEOUT!")
+                new_state = State.DRY      
 
             if (self.wash_time > 1200 and self.dry_time > 20):
                 if (sample < (self.dry_min + self.wash_th)):
@@ -93,9 +92,7 @@ class HeuristicSignalProcessor(SignalProcessor):
                 else:
                     self.both_idle_count = 0
 
-            if (sample < self.wash_th):
-                new_state = State.NONE
-            elif (sample < self.dry_th):
+            if (sample < self.dry_th):
                 new_state = State.WASH
             elif (sample < self.dry_min):
                 self.dry_min = sample
