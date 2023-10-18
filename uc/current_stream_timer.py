@@ -6,7 +6,7 @@ import network
 import socket
 import secrets
 
-SERVER_NAME="launmon.ddns.net"
+SERVER_NAME="laundry.375lincoln.nyc"
 
 led = machine.Pin("LED", machine.Pin.OUT)
 
@@ -22,13 +22,14 @@ average = 0
 dif_sum = 0
 variance = 0
 std = 0
+count = 0
 
 def get_ip(host, port=80):
     addr_info = socket.getaddrinfo(host, port)
     return addr_info[0][-1][0]
 
 def newsample(t):
-    global x, ix, average, win_sum, dif_sum, variance, N
+    global count,x, ix, average, win_sum, dif_sum, variance, N
     x[ix] = adc.read_u16()
     new = x[ix]
     oix = ix
@@ -40,6 +41,9 @@ def newsample(t):
     m[oix] = abs(new - average)
     dif_sum += m[oix] - m[ix]
     variance = dif_sum / N
+    if (count < 2*N):
+        count+=1
+        variance = 0
 
 
 timer = machine.Timer(-1)
@@ -57,12 +61,14 @@ while not wlan.isconnected():
     led.toggle()
     print("...")
     count += 1
-    if (count > 20):
+    if (count > 30):
         machine.reset()
+        
+count=0
 
 print("wifi connected.")
 
-wdt = machine.WDT(timeout=5000)
+wdt = machine.WDT(timeout=8000)
 
 try:
     ip = get_ip(SERVER_NAME)
@@ -85,7 +91,7 @@ timer2.init(
 )
 
 utime.sleep(2)
-wdt = machine.WDT(timeout=2000)
+
 while True:
     print(variance)
     print("time is ticking")
