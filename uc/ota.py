@@ -9,6 +9,9 @@ import hashlib, binascii
 wdt = machine.WDT(timeout=8000)
 
 SERVER_NAME="laundry.375lincoln.nyc"
+TASK_URL="https://" + SERVER_NAME + "/ota-update/task.py"
+TASK_FILE="task.py"
+CHECKSUM_URL=TASK_URL + ".sha1sum"
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
@@ -34,10 +37,10 @@ led.on()
 
 print("getting task file.")
 wdt.feed()
-r = requests.get("https://" + SERVER_NAME + "/ota-update/task.py", timeout=5)
+r = requests.get(TASK_URL, timeout=5)
 print("getting checksum")
 wdt.feed()
-r2 = requests.get("https://" + SERVER_NAME + "/ota-update/task.py.sha1sum", timeout=5)
+r2 = requests.get(CHECKSUM_URL, timeout=5)
 wdt.feed()
 print("verifying checkum")
 remote_sha1 = binascii.hexlify(hashlib.sha1(r.text).digest()).decode('ascii')
@@ -46,7 +49,7 @@ wdt.feed()
 
 local_sha1 = 'nomatch'
 try:
-    with open('task.py','r') as f:
+    with open(TASK_FILE,'r') as f:
         contents = f.read()
         local_sha1 = binascii.hexlify(hashlib.sha1(contents).digest()).decode('ascii')
 except Exception as e:
@@ -57,7 +60,7 @@ print(remote_sha1)
 print(local_sha1)
 if (remote_check == remote_sha1 and remote_check != local_sha1):
     print ("writing file!")
-    f = open('task.py','w')
+    f = open(TASK_FILE,'w')
     f.write(r.text)
     f.close()
     
@@ -69,7 +72,7 @@ except Exception as e:
 while True:
     print("update?")
 
-    r2 = requests.get("https://" + SERVER_NAME + "/ota-update/task.py.sha1sum", timeout=5)
+    r2 = requests.get(CHECKSUM_URL, timeout=5)
     remote_check = r2.text.split()[0].strip()
     if (remote_check != local_sha1):
         print("update!")
