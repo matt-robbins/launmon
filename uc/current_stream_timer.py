@@ -55,17 +55,15 @@ wlan.connect(secrets.SSID, secrets.PASS)
 
 led.off()
 print("hi")
-count = 0
+ccount = 0
 while not wlan.isconnected():
     utime.sleep(1)
     led.toggle()
     print("...")
-    count += 1
-    if (count > 30):
+    ccount += 1
+    if (ccount > 30):
         machine.reset()
         
-count=0
-
 print("wifi connected.")
 
 wdt = machine.WDT(timeout=8000)

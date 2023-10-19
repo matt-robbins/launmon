@@ -8,8 +8,6 @@ import secrets
 #
 SERVER_NAME="laundry.375lincoln.nyc"
 
-led = machine.Pin("LED", machine.Pin.OUT)
-
 adc = machine.ADC(0)
 N = 1000
 
@@ -37,7 +35,7 @@ def update_ip(host, port=80):
 def transmit(t):
     update_ip(SERVER_NAME)
     server = (ip,secrets.PORT)
-    sock.sendto("%f\n" % variance, server)
+    sock.sendto("%0.2f\n" % variance, server)
 
 def newsample(t):
     global count, x, ix, average, win_sum, dif_sum, variance, N
