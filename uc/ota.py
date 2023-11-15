@@ -1,10 +1,10 @@
 import machine
 import utime
 import network
-import socket
 import secrets
 import urequests as requests
-import hashlib, binascii
+import hashlib
+import binascii
 
 class FakeWDT:
     def __init__(self,timeout=5000):
@@ -36,7 +36,7 @@ def check_update(file, wdt):
             with open(file,'r') as f:
                 local_cs = binascii.hexlify(hashlib.sha1(f.read()).digest()).decode('ascii')
         except Exception as e:
-            print("failed to read '%s'" % file)
+            print("failed to read '%s': %s" % (file,e))
         else:
             FILE_HASHES[file] = local_cs
     
@@ -71,7 +71,7 @@ def check_update(file, wdt):
         with open(file,'w') as f:
             f.write(r.text)
     except Exception as e:
-        print("failed to write file!")
+        print("failed to write file!: %s" % e)
         return False
         
     return True
@@ -118,7 +118,7 @@ check_update("remote.py",wdt)
 led.on()
 
 try:
-    import remote
+    import remote  # noqa: F401
 except Exception as e:
     print("task failed to run: %s" % (e,))
 

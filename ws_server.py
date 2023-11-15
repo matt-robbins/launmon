@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 import asyncio
-import datetime
-import random
 import websockets
 import redis
 import json
-
 
 CONNECTIONS = set()
 r = redis.Redis()

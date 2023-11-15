@@ -1,10 +1,7 @@
 import machine
-import utime
 import time
 import array
-import network
 import socket
-import secrets
 import urequests as requests
 
 SERVER_NAME="192.168.1.21"

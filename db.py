@@ -67,7 +67,7 @@ class LaundryDb:
         return ret
     
     def getLocations(self):
-        return [l[0] for l in self.fetch("SELECT location FROM locations;")]
+        return [loc[0] for loc in self.fetch("SELECT location FROM locations;")]
 
     def addEvent(self, location, status, time=datetime.datetime.utcnow()):
         sqlt = """INSERT INTO events VALUES (?, ?, ?);"""
@@ -261,6 +261,7 @@ class LaundryDb:
         try:
             self.insert(sqlt,(cal, location))
         except Exception as e:
+            print("failed to set calibration for %s: %s"% (location, e))
             pass
         
     def getLocationCalibration(self,location=None):
@@ -269,14 +270,14 @@ class LaundryDb:
             WHERE devices.location = ?"""
         try:
             return float(self.fetch(sqlt, (location,))[0][0])
-        except Exception as e:
+        except Exception:
             return 1.0
         
     @ttl_cache(ttl=1)
     def checkDevice(self,uuid):
         try:
             return bool(self.fetch("SELECT count(*) > 0 FROM devices WHERE device = ?", (uuid,))[0][0])
-        except Exception as e:
+        except Exception:
             return False
         
     def inesertDevice(self,uuid=None):

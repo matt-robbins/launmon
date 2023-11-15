@@ -10,8 +10,8 @@ class DataMuncher:
     def publish(self, channel, data):
         try:
             self.r.publish(channel,data)
-        except:
-            print ("failed to publish data")
+        except Exception as e:
+            print ("failed to publish data %s" % e)
             pass
 
     def setstatus(self, location, status, time):
@@ -25,11 +25,11 @@ class DataMuncher:
         self.publish("status:"+location, oldstatus+":"+status)
 
     def checkOffline(self,time):
-        for l in self.locations:
-            if (self.online[l] and time - self.lastseen[l] > timedelta(seconds=OFFLINE_THRESHOLD_S)):
-                self.online[l] = False
-                self.processors[l].reset()
-                self.setstatus(l,"offline", time)
+        for loc in self.locations:
+            if (self.online[loc] and time - self.lastseen[loc] > timedelta(seconds=OFFLINE_THRESHOLD_S)):
+                self.online[loc] = False
+                self.processors[loc].reset()
+                self.setstatus(loc,"offline", time)
 
     def process_sample(self, location, data, time):
 
@@ -66,8 +66,8 @@ class DataMuncher:
         self.lastseen = {}
         self.processors = {}
         now = datetime.utcnow()
-        for l in self.locations:
-            self.processors[l] = HeuristicSignalProcessor()
-            self.lastseen[l] = now
-            self.online[l] = False        
+        for loc in self.locations:
+            self.processors[loc] = HeuristicSignalProcessor()
+            self.lastseen[loc] = now
+            self.online[loc] = False        
 

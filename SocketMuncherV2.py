@@ -28,6 +28,7 @@ class SocketMuncherV2(DataMuncher):
                 try:
                     self.db.inesertDevice(uuid)
                 except Exception as e:
+                    print("couldn't insert device %s" % e)
                     continue
                 
                 location = self.db.getDeviceLocation(uuid)

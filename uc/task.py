@@ -1,8 +1,6 @@
 import machine
-import utime
 import time
 import array
-import network
 import socket
 import secrets
 
