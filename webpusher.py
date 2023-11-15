@@ -18,6 +18,8 @@ class Webpusher:
             _, location = str.split(msg['channel'].decode(),':')
             trans = msg['data'].decode()
 
+            from_state,to_state = trans.split(":")
+
             event_text = ""
             sass = "Get it!"
             if (trans in ["none:wash", "dry:both"]):
@@ -34,6 +36,12 @@ class Webpusher:
                 sass = "Squeaky Clean!"
             elif (trans == "both:none"):
                 event_text = "Done"
+            elif (to_state == "offline"):
+                event_text = "Went Offline"
+                sass = "Oh no!"
+            elif (from_state == "offline"):
+                event_text = "Came Back Online"
+                sass = "Yay!!"
 
             payload = {"location":"","message":event_text, "sass":sass}
 

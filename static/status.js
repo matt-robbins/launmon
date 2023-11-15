@@ -13,7 +13,7 @@ function update() {
         
         running[floorStatus.floor] = floorStatus.wash || floorStatus.dry
 
-        if (Date.now() - lastSeen > 60 * 1000) {
+        if ((Date.now() - lastSeen > 60 * 1000 )|| (floorStatus.offline == true)) {
             floor
             .find("[data-js-attr='floor-updated-at']")
             .text(`Last seen: ${lastSeen.toLocaleDateString()}`);

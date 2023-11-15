@@ -3,6 +3,7 @@
 from enum import Enum
 
 class State(Enum):
+    OFFLINE = -1
     NONE = 0
     WASH = 1
     DRY = 2

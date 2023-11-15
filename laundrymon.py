@@ -85,6 +85,7 @@ def status_json_v2():
             "floor": line[0],
             "wash": line[1] in ("wash", "both"),
             "dry": line[1] in ("dry", "both"),
+            "offline": line[1] in ("offline",),
             "time": line[2],
             "last_seen": line[3],
             "location": line[4],
@@ -164,6 +165,19 @@ def current_range_json():
 def current_graph():
     return None
 
+@app.route("/device-port")
+def device_port():
+    return "5555"
+
+@app.route("/device-location")
+def device_location():
+    uuid = request.args.get("uuid", "", type=str)
+    loc = db.getDeviceLocation(uuid)
+    if (loc is None):
+        if (uuid):
+            db.inesertDevice(uuid)
+        return ""
+    return loc
 
 @app.route("/wash")
 def washing():

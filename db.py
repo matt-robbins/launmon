@@ -2,7 +2,7 @@ import sqlite3
 import datetime
 import os
 from contextlib import closing
-
+from cachetools.func import ttl_cache
 
 class LaundryDb:
     def __init__(self, path="laundry.db"):
@@ -28,8 +28,15 @@ class LaundryDb:
         )
         self.create(
             """
+            CREATE TABLE IF NOT EXISTS devices
+            (device TEXT UNIQUE, location TEXT, port TEXT, 
+            calibration REAL, changed TIMESTAMP)
+            """
+        )
+        self.create(
+            """
             CREATE TABLE IF NOT EXISTS calibration 
-            (location TEXT UNIQUE, calibration REAL)
+            (location TEXT UNIQUE, calibration REAL, changed TIMESTAMP)
             """
         )
         self.create(
@@ -58,6 +65,9 @@ class LaundryDb:
             with closing(con.cursor()) as cur:
                 ret = cur.execute(query, args).fetchall()
         return ret
+    
+    def getLocations(self):
+        return [l[0] for l in self.fetch("SELECT location FROM locations;")]
 
     def addEvent(self, location, status, time=datetime.datetime.utcnow()):
         sqlt = """INSERT INTO events VALUES (?, ?, ?);"""
@@ -72,6 +82,7 @@ class LaundryDb:
         """
         self.insert(sqlt, {"loc": location, "ts": time})
 
+    @ttl_cache(ttl=1)
     def getLatest(self):
         sqlt = """SELECT e.location, e.status, e.time, l.lastseen, l.nickname FROM events e
                 INNER JOIN (
@@ -228,6 +239,50 @@ class LaundryDb:
             location = ?;"""
         self.insert(sqlt,(endpoint,location))
 
+    @ttl_cache(ttl=1)
+    def getDeviceLocation(self,device=""):
+        sqlt = """SELECT location FROM devices WHERE device = ?;"""
+        try:
+            return self.fetch(sqlt,(device,))[0][0]
+        except Exception as e:
+            print(e)
+            return None
+        
+    def getDeviceCalibration(self,device=""):
+        sqlt = """SELECT calibration FROM devices WHERE device = ?;"""
+        try:
+            return float(self.fetch(sqlt,(device,))[0][0])
+        except Exception as e:
+            print(e)
+            return 1.0
+
+    def setLocationCalibration(self,location=None, cal=1.0):
+        sqlt = """UPDATE devices SET calibration = ? WHERE location = ?"""
+        try:
+            self.insert(sqlt,(cal, location))
+        except Exception as e:
+            pass
+        
+    def getLocationCalibration(self,location=None):
+        sqlt = """SELECT calibration FROM devices 
+            JOIN locations ON devices.location = locations.location
+            WHERE devices.location = ?"""
+        try:
+            return float(self.fetch(sqlt, (location,))[0][0])
+        except Exception as e:
+            return 1.0
+        
+    @ttl_cache(ttl=1)
+    def checkDevice(self,uuid):
+        try:
+            return bool(self.fetch("SELECT count(*) > 0 FROM devices WHERE device = ?", (uuid,))[0][0])
+        except Exception as e:
+            return False
+        
+    def inesertDevice(self,uuid=None):
+        if (self.checkDevice(uuid) or uuid is None):
+            return
+        return self.insert("INSERT OR IGNORE INTO devices VALUES (?,null,'5555',null,datetime('now'));", (uuid,))
     
 
 if __name__ == "__main__":

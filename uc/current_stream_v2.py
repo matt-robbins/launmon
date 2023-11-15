@@ -5,8 +5,9 @@ import array
 import network
 import socket
 import secrets
+import urequests as requests
 
-SERVER_NAME="laundry.375lincoln.nyc"
+SERVER_NAME="192.168.1.21"
 
 adc = machine.ADC(0)
 N = 1000
@@ -34,9 +35,14 @@ def update_ip(host, port=80):
 
 update_ip(SERVER_NAME)
 
+r = requests.get(SERVER_NAME+"/device-port?device="+machine.get)
+port = int(r.text)
+print("got port = %d" % port)
+
 def transmit(t):
 #    update_ip(SERVER_NAME)
-    server = (ip,secrets.PORT)
+    global port
+    server = (ip,port)
     sock.sendto("%0.2f\n" % variance, server)
 
 def newsample(t):

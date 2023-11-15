@@ -37,7 +37,9 @@ class HeuristicSignalProcessor(SignalProcessor):
         # use nan to represent a gap in data
         if math.isnan(sample):
             if (self.state == State.NONE):
-                return None
+                if only_diff:
+                    return None
+                return self.state
             else:
                 self.reset()
                 return State.NONE
@@ -122,7 +124,9 @@ class HeuristicSignalProcessor(SignalProcessor):
             self.state = new_state
             return new_state
         
-        return None
+        if only_diff:
+            return None
+        return self.state
 
 if __name__ == "__main__":
     p = HeuristicSignalProcessor()

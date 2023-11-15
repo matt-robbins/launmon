@@ -11,61 +11,86 @@ class FakeWDT:
         self.timeout = timeout
         self.timer = machine.Timer()
         self.feed()
-                
+
     def feed(self):
         self.timer.init(
             period=self.timeout,
             mode=machine.Timer.ONE_SHOT,
             callback=lambda t: print("Fake WDT timed out!"),
         )
-        
-def check_update():
-    print("DNS")
-    sockaddr = socket.getaddrinfo(SERVER_NAME, 7007)[0][-1]
-    print("done.")
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(0.7)
 
-    try:
-        sock.connect(sockaddr)
-        cs = sock.recv(100).split()[0].strip().decode('ascii')
-    except OSError as e:
-        print("timed out waiting for checksum %s" % e)
-        cs = 'ooo'
-        
-    sock.close()
-    return cs
+BASE_URL="http://laundry.375lincoln.nyc/ota-update/"
+CHECKSUM_EXT=".sha1sum"
 
-def update(remote_sha1):
+FILE_HASHES = {}
+
+def check_update(file, wdt):
+    url = BASE_URL+file
+    cs_url = url+CHECKSUM_EXT
+    local_cs = 'xxx'
     try:
-        r = requests.get(TASK_URL, timeout=5)
+        local_cs = FILE_HASHES[file]
+    except KeyError:
+        print("no hash in dict for %s" % file)
+        try:
+            with open(file,'r') as f:
+                local_cs = binascii.hexlify(hashlib.sha1(f.read()).digest()).decode('ascii')
+        except Exception as e:
+            print("failed to read '%s'" % file)
+        else:
+            FILE_HASHES[file] = local_cs
+    
+    try:
+        r = requests.get(cs_url, timeout=1)
+        remote_cs = r.text.split()[0].strip()
+    except OSError:
+        print("timed out getting checksum")
+        return False
+    
+    wdt.feed()
+    if (remote_cs == local_cs):
+        return False
+    
+    try:
+        r = requests.get(url, timeout=1)
     except OSError:
         print("timed out getting remote file")
-    else:
-        print("verifying checkum")
-        dl_sha1 = binascii.hexlify(hashlib.sha1(r.text).digest()).decode('ascii')
+        return False
+    
+    wdt.feed()
+    print("verifying checkum")
+    dl_cs = binascii.hexlify(hashlib.sha1(r.text).digest()).decode('ascii')
 
-        if (dl_sha1 == remote_sha1):
-            print ("writing file!")
-            with open(TASK_FILE,'w') as f:
-                f.write(r.text)
+    if (dl_cs != remote_cs):
+        print("checksum failed")
+        return False
+    
+    wdt.feed()
+    print ("writing file!")
+    try:
+        with open(file,'w') as f:
+            f.write(r.text)
+    except Exception as e:
+        print("failed to write file!")
+        return False
         
+    return True
+
 test = machine.Pin(0, machine.Pin.IN,machine.Pin.PULL_UP)
 
-print(test.value())
 if test.value():
     wdt = machine.WDT(timeout=8000)
 else:
     wdt = FakeWDT(8000)
-
-SERVER_NAME="laundry.375lincoln.nyc"
-TASK_URL="https://" + SERVER_NAME + "/ota-update/task.py"
-TASK_FILE="task.py"
-CHECKSUM_URL=TASK_URL + ".sha1sum"
+    
+def reset():
+    if test.value():
+        machine.reset()
+    else:
+        print("resetting... PSych! You gotta do it.")
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-
 wlan.connect(secrets.SSID, secrets.PASS)
 
 led = machine.Pin("LED", machine.Pin.OUT)
@@ -80,44 +105,29 @@ while not wlan.isconnected():
     wdt.feed()
     count += 1
     if (count > 30):
-        machine.reset()
+        reset()
 
 print("wifi connected.")
 
 led.off()
-
-local_sha1 = 'xxx'
-try:
-    with open(TASK_FILE,'r') as f:
-        local_sha1 = binascii.hexlify(hashlib.sha1(f.read()).digest()).decode('ascii')
-except Exception as e:
-    print("failed to read task file")
-        
-print("checking for update")
-wdt.feed()
-remote_sha1 = check_update()
-
+if check_update("main.py",wdt):
+    reset()
+    
+check_update("remote.py",wdt)
+    
 led.on()
 
-if (not remote_sha1 == local_sha1):
-    print("getting task file.")
-    wdt.feed()
-    update(remote_sha1)
-    
 try:
-    import task
+    import remote
 except Exception as e:
     print("task failed to run: %s" % (e,))
 
 while True:
     print("update?")
-    remote_sha1 = check_update()
-    if (not remote_sha1 in [local_sha1, 'ooo']):
-        machine.reset()
-    print("nope")
+    if check_update("remote.py",wdt):
+        reset()
+    
     for i in range(10):
-        print("time is ticking")
         if wlan.isconnected():
             wdt.feed()
         utime.sleep(1)
-

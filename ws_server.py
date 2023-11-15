@@ -18,9 +18,9 @@ async def register(websocket):
     finally:
         CONNECTIONS.remove(websocket)
 
-async def show_time():
+async def rebroadcast():
     while True:
-        message = p.get_message()
+        message = p.get_message(timeout=1)
         if (message is not None):
             ch, machine = str.split(message['channel'].decode(),':')
             data = message['data'].decode()
@@ -31,7 +31,7 @@ async def show_time():
 
 async def main():
     async with websockets.serve(register, "localhost", 5678):
-        await show_time()
+        await rebroadcast()
 
 if __name__ == "__main__":
     p.psubscribe("status:*","current:*")
