@@ -39,7 +39,7 @@ class DataMuncher:
             )
             return
 
-        if not location in self.locations:
+        if location not in self.locations:
             print("unrecognized location, %s" % location)
             return
 
