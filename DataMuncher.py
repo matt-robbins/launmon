@@ -68,5 +68,5 @@ class DataMuncher:
         now = datetime.utcnow()
         for loc in self.locations:
             self.processors[loc] = HeuristicSignalProcessor()
-            self.lastseen[loc] = now
+            self.lastseen[loc] = now - timedelta(days=1)
 

@@ -8,7 +8,7 @@ from MqttMuncher import MqttMuncher
 from multiprocessing import Process
 import time
 from datetime import datetime
-import secrets
+import mqttsecrets as secrets
 
 class OfflineChecker(DataMuncher):
     def run(self,):

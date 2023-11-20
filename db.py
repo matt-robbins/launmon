@@ -76,11 +76,11 @@ class LaundryDb:
     def addCurrentReading(self, location, value, time=datetime.utcnow()):
         sqlt = """INSERT INTO rawcurrent VALUES (?, ?, ?);"""
         self.insert(sqlt, (location, value, time))
-        sqlt = """
-        INSERT INTO locations (location,lastseen) VALUES (:loc,:ts)
-        ON CONFLICT (location) DO UPDATE SET lastseen=:ts;
-        """
-        self.insert(sqlt, {"loc": location, "ts": time})
+        # sqlt = """
+        # INSERT INTO locations (location,lastseen) VALUES (:loc,:ts)
+        # ON CONFLICT (location) DO UPDATE SET lastseen=:ts;
+        # """
+        # self.insert(sqlt, {"loc": location, "ts": time})
 
     @ttl_cache(ttl=1)
     def getLatest(self):
