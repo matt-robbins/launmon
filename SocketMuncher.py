@@ -31,16 +31,19 @@ class SocketMuncher(DataMuncher):
                 
                 self.process_sample(loc,sanitized,now)
 
-            self.checkOffline(now)
-
     def __init__(self, base_port):
         DataMuncher.__init__(self)
         self.publish_input = True
 
         self.inputs = []
-
+        maxp = 0
         for loc in self.locations:
-            port = base_port + int(loc)
+            try:
+                poffset = int(loc)
+            except ValueError:
+                poffset = maxp
+            maxp = poffset + 1
+            port = base_port + poffset
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.bind((UDP_IP, port))
 

@@ -24,25 +24,27 @@ class DataMuncher:
         self.db.addEvent(location, status, time)
         self.publish("status:"+location, oldstatus+":"+status)
 
-    def checkOffline(self,time):
-        for loc in self.locations:
-            if (self.online[loc] and time - self.lastseen[loc] > timedelta(seconds=OFFLINE_THRESHOLD_S)):
-                self.online[loc] = False
-                self.processors[loc].reset()
+    def checkOffline(self,time=datetime.utcnow()):
+        lastseen = self.db.getLastSeen()
+        for loc in lastseen.keys():
+            if (time - lastseen[loc] > timedelta(seconds=OFFLINE_THRESHOLD_S)):
                 self.setstatus(loc,"offline", time)
 
     def process_sample(self, location, data, time):
 
-        only_diff =  self.online[location]
-
-        self.online[location] = True
-        self.lastseen[location] = time
-
-        if (self.publish_input):
+        if not self.master:
             self.publish("current:"+location,data)
             self.db.addCurrentReading(
                 location, data, time
             )
+            return
+
+        if not location in self.locations:
+            print("unrecognized location, %s" % location)
+            return
+
+        only_diff = (time - self.lastseen[location]).seconds < OFFLINE_THRESHOLD_S
+        self.lastseen[location] = time
 
         cal = self.db.getLocationCalibration(location)
         status = self.processors[location].process_sample(data*cal, only_diff=only_diff)
@@ -51,23 +53,20 @@ class DataMuncher:
 
         self.setstatus(location, status.name.lower(), time)
 
-
     def run(self):
         pass
 
-    def __init__(self):
+    def __init__(self, master=False):
         self.db = db.LaundryDb()
         self.r = Redis()
 
         self.locations = self.db.getLocations()
-        self.publish_input = False
+        self.master = master
 
-        self.online = {}
         self.lastseen = {}
         self.processors = {}
         now = datetime.utcnow()
         for loc in self.locations:
             self.processors[loc] = HeuristicSignalProcessor()
             self.lastseen[loc] = now
-            self.online[loc] = False        
 

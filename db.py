@@ -1,8 +1,8 @@
 import sqlite3
-import datetime
 import os
 from contextlib import closing
 from cachetools.func import ttl_cache
+from datetime import datetime
 
 class LaundryDb:
     def __init__(self, path="laundry.db"):
@@ -69,11 +69,11 @@ class LaundryDb:
     def getLocations(self):
         return [loc[0] for loc in self.fetch("SELECT location FROM locations;")]
 
-    def addEvent(self, location, status, time=datetime.datetime.utcnow()):
-        sqlt = """INSERT INTO events VALUES (?, ?, ?);"""
-        self.insert(sqlt, (location, status, time))
+    def addEvent(self, location, status, time=datetime.utcnow()):
+        insert = """INSERT INTO events VALUES (?, ?, ?);"""
+        self.insert(insert, (location, status, time))
 
-    def addCurrentReading(self, location, value, time=datetime.datetime.utcnow()):
+    def addCurrentReading(self, location, value, time=datetime.utcnow()):
         sqlt = """INSERT INTO rawcurrent VALUES (?, ?, ?);"""
         self.insert(sqlt, (location, value, time))
         sqlt = """
@@ -96,11 +96,22 @@ class LaundryDb:
 
     def getLatestStatus(self, location):
         sqlt = """SELECT status FROM events WHERE location = ? ORDER BY time DESC LIMIT 1;"""
-        return self.fetch(sqlt,(location,))[0][0]
+        try:
+            status = self.fetch(sqlt,(location,))[0][0]
+        except IndexError:
+            status = "offline"
+        return status
     
     def getLastSeen(self):
         sqlt = """SELECT location, lastseen FROM locations;"""
-        return self.fetch(sqlt)
+        lastseen = self.fetch(sqlt)
+        ret = {}
+        for tup in lastseen:
+            try:
+                ret[tup[0]] = datetime.strptime(tup[1], "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                ret[tup[0]] = None
+        return ret
 
     def getCal(self, location="1"):
         sqlt = "SELECT calibration FROM calibration WHERE location = ?;"
@@ -245,7 +256,7 @@ class LaundryDb:
         try:
             return self.fetch(sqlt,(device,))[0][0]
         except Exception as e:
-            print(e)
+            print("couldn't get device location: %s" % e)
             return None
         
     def getDeviceCalibration(self,device=""):
