@@ -8,6 +8,7 @@ from MqttMuncher import MqttMuncher
 from multiprocessing import Process
 import time
 from datetime import datetime
+import secrets
 
 class OfflineChecker(DataMuncher):
     def run(self,):
@@ -23,7 +24,7 @@ if __name__ == "__main__":
     munchers = [
         SocketMuncher(base_port),
         SocketMuncherV2(),
-        MqttMuncher(host="375lincoln.nyc",username="launmon",password="monny"),
+        MqttMuncher(host="375lincoln.nyc",username=secrets.USER,password=secrets.PASS),
         OfflineChecker(),
         RedisMuncher(master=True)
     ]
