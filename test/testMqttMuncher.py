@@ -1,9 +1,8 @@
 import unittest
 from MqttMuncher import MqttMuncher
 
-class TestProcessor(unittest.TestCase):
+class TestMuncher(unittest.TestCase):
     def setUp(self):
-        self.muncher = MqttMuncher(username="launmon",password="monny")
-
+        pass
     def test_connection(self):
         return True
