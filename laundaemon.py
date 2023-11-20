@@ -11,7 +11,7 @@ from datetime import datetime
 import mqttsecrets as secrets
 
 class OfflineChecker(DataMuncher):
-    def run(self,):
+    def run(self):
         while True:
             self.checkOffline(datetime.utcnow())
             time.sleep(1)
