@@ -10,6 +10,7 @@ class MqttMuncher(DataMuncher):
             self.input.loop(timeout=1)
             if not self.connected:
                 print("not connected!")
+                self.connect()
                 time.sleep(1)
 
     @staticmethod
@@ -27,6 +28,7 @@ class MqttMuncher(DataMuncher):
     def disconnect_cb(cli, self, rc):
         self.connected = False
         print("disconnected!")
+        self.connect()
         
     @staticmethod
     def message_cb(cli, self, msg):
@@ -43,10 +45,18 @@ class MqttMuncher(DataMuncher):
             loc = device
 
         self.process_sample(loc,sample,datetime.utcnow())
+
+    def connect(self):
+        try:
+            self.input.connect(self.host, self.port, keepalive=60)
+        except Exception as e:
+            print("failed to connect: %s" % e)
             
     def __init__(self, host="localhost", port=1883, username=None, password=None):
         DataMuncher.__init__(self)
         self.input = mqtt.Client()
+        self.host = host
+        self.port = port
         self.connected = False
 
         if username and password:
@@ -57,7 +67,7 @@ class MqttMuncher(DataMuncher):
         self.input.on_message = self.message_cb
         self.input.on_disconnect = self.disconnect_cb
 
-        self.input.connect(host, port, keepalive=60)
+        self.connect()
         self.master = False
         
 if __name__ == "__main__":

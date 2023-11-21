@@ -43,7 +43,7 @@ class DataMuncher:
             print("unrecognized location, %s" % location)
             return
 
-        only_diff = (time - self.lastseen[location]).seconds < OFFLINE_THRESHOLD_S
+        only_diff = (time - self.lastseen[location]).total_seconds() < OFFLINE_THRESHOLD_S
         self.lastseen[location] = time
 
         cal = self.db.getLocationCalibration(location)
