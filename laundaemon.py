@@ -55,7 +55,6 @@ async def mqtt_main(muncher):
                         except ValueError:
                             print("bad message %s" % msg.payload)
                             return
-                        print(sample)
                         device = msg.topic.value.split("/")[0].split('-')[-1]
                         loc = muncher.get_device_location(device)
                         if (loc is None):

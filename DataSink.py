@@ -40,7 +40,6 @@ class CurrentSink(DataSink):
 class StatusSink(DataSink):
     def process_data(self,location,data,time):
         status = data
-        print("%s:%s" %(location,status))
         try:
             oldstatus = self.db.getLatestStatus(location)
         except Exception as e:
