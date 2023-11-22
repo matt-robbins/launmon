@@ -46,7 +46,7 @@ class V2Protocol(asyncio.DatagramProtocol):
 async def mqtt_main(muncher):
     while True:
         try:
-            async with aiomqtt.Client("localhost",username=secrets.USER,password=secrets.PASS) as client:
+            async with aiomqtt.Client(secrets.HOST,username=secrets.USER,password=secrets.PASS) as client:
                 async with client.messages() as messages:
                     await client.subscribe("+/sensor/current/state")
                     async for msg in messages:
