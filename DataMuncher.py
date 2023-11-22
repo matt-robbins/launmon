@@ -3,41 +3,36 @@ from datetime import datetime, timedelta
 import db
 from redis import Redis
 from HeuristicSignalProcessor import HeuristicSignalProcessor
+from DataSink import CurrentSink, StatusSink
 
 OFFLINE_THRESHOLD_S = 10
 
 class DataMuncher:
-    def publish(self, channel, data):
-        try:
-            self.r.publish(channel,data)
-        except Exception as e:
-            print ("failed to publish data %s" % e)
-            pass
-
-    def setstatus(self, location, status, time):
-        oldstatus = self.db.getLatestStatus(location)
-        if (oldstatus == status):
-            return
-        
-        print("machine %s changed state: %s" % (location, status))
-        
-        self.db.addEvent(location, status, time)
-        self.publish("status:"+location, oldstatus+":"+status)
 
     def checkOffline(self,time=datetime.utcnow()):
-        lastseen = self.db.getLastSeen()
+        try:
+            lastseen = self.db.getLastSeen()
+        except Exception as e:
+            print("couldn't get status: %s" % e)
+            return
+        
         for loc in lastseen.keys():
-            if (time - lastseen[loc] > timedelta(seconds=OFFLINE_THRESHOLD_S)):
-                self.setstatus(loc,"offline", time)
+            td = time - lastseen[loc]
+
+            if (td > timedelta(seconds=OFFLINE_THRESHOLD_S)):
+                if (self.event_sink):
+                    self.event_sink.process_data(loc, "offline", time)
+
+    def get_device_location(self, device):
+        try:
+            return self.db.getDeviceLocation(device)
+        except Exception:
+            return None
 
     def process_sample(self, location, data, time):
 
-        if not self.master:
-            self.publish("current:"+location,data)
-            self.db.addCurrentReading(
-                location, data, time
-            )
-            return
+        if (self.cur_sink):
+            self.cur_sink.process_data(location,data,time)
 
         if location not in self.locations:
             print("unrecognized location, %s" % location)
@@ -46,22 +41,26 @@ class DataMuncher:
         only_diff = (time - self.lastseen[location]).total_seconds() < OFFLINE_THRESHOLD_S
         self.lastseen[location] = time
 
-        cal = self.db.getLocationCalibration(location)
+        try:
+            cal = self.db.getLocationCalibration(location)
+        except Exception as e:
+            print ("failed to get calibration value for %s: %s" % (location, e))
+            cal = 1.0
+
         status = self.processors[location].process_sample(data*cal, only_diff=only_diff)
         if status is None:
             return
 
-        self.setstatus(location, status.name.lower(), time)
+        if (self.event_sink):
+            self.event_sink.process_data(location, status.name.lower(), time)
 
-    def run(self):
-        pass
 
-    def __init__(self, master=False):
+    def __init__(self, cur_sink=CurrentSink(),event_sink=StatusSink()):
         self.db = db.LaundryDb()
-        self.r = Redis()
 
         self.locations = self.db.getLocations()
-        self.master = master
+        self.cur_sink = cur_sink
+        self.event_sink = event_sink
 
         self.lastseen = {}
         self.processors = {}
