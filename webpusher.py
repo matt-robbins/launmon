@@ -39,8 +39,14 @@ class Webpusher:
             elif (to_state == "offline"):
                 event_text = "Went Offline"
                 sass = "Oh no!"
+            elif (to_state == "ooo"):
+                event_text = "Is Out of Order"
+                sass = "Oh no!"
             elif (from_state == "offline"):
                 event_text = "Came Back Online"
+                sass = "Yay!!"
+            elif (from_state == "ooo"):
+                event_text = "Is Back"
                 sass = "Yay!!"
 
             payload = {"location":"","message":event_text, "sass":sass}

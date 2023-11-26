@@ -13,7 +13,7 @@ function update() {
         
         running[floorStatus.floor] = floorStatus.wash || floorStatus.dry
 
-        if ((Date.now() - lastSeen > 60 * 1000 )|| (floorStatus.offline == true)) {
+        if ((Date.now() - lastSeen > 60 * 1000 ) || (floorStatus.offline == true)) {
             floor
             .find("[data-js-attr='floor-updated-at']")
             .text(`Last seen: ${lastSeen.toLocaleDateString()}`);
@@ -27,22 +27,41 @@ function update() {
             .attr("class", "machine dryer")
             .find(".label")
             .text("Offline");
-        } else {
+        } 
+        else {
+            dry_text = wash_text = "Available"
+            
+            if (floorStatus.wash === true) {
+                wash_text = "Running"
+            }
+            if (floorStatus.dry === true) {
+                wash_text = "Running"
+            }
+            if (floorStatus.ooo === true) {
+                dry_text = wash_text = "Error!"
+            }
+            if (floorStatus.offline === true) {
+                dry_text = wash_text = "Offline"
+            }
             floor
             .find("[data-js-attr='floor-updated-at']")
             .text(`Last updated: ${lastUpdated.toLocaleTimeString()}`);
             floor
             .find("svg.washer")
+            .attr("class", "machine washer")
             .toggleClass("running", floorStatus.wash === true)
             .toggleClass("available", floorStatus.wash === false)
+            .toggleClass("ooo", floorStatus.ooo === true)
             .find(".label")
-            .text(floorStatus.wash === true ? "Running" : "Available");
+            .text(wash_text);
             floor
             .find("svg.dryer")
+            .attr("class", "machine dryer")
             .toggleClass("running", floorStatus.dry === true)
             .toggleClass("available", floorStatus.dry === false)
+            .toggleClass("ooo", floorStatus.ooo === true)
             .find(".label")
-            .text(floorStatus.dry === true ? "Running" : "Available");
+            .text(dry_text);
         }
         });
     });

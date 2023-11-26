@@ -86,6 +86,7 @@ def status_json_v2():
             "wash": line[1] in ("wash", "both"),
             "dry": line[1] in ("dry", "both"),
             "offline": line[1] in ("offline",),
+            "ooo": line[1] in ("ooo"),
             "time": line[2],
             "last_seen": line[3],
             "location": line[4],
