@@ -1,7 +1,6 @@
 
 from datetime import datetime, timedelta
 import db
-from redis import Redis
 from HeuristicSignalProcessor import HeuristicSignalProcessor
 from DataSink import CurrentSink, StatusSink
 
