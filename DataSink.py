@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 from redis import Redis
 from db import LaundryDb
 
