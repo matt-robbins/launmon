@@ -6,8 +6,8 @@ import math
 # "Expert System" classifier for laundry status given current.
 class HeuristicSignalProcessor(SignalProcessor):
     def __init__(self, 
-        spike_max=200, wash_th=60, dry_th=700, 
-        idle_time=16,both_idle_time=30,cal=1.0):
+        spike_max=200, spike_th=10,wash_th=60, dry_th=700, 
+        idle_time=30,both_idle_time=30,cal=1.0):
 
         self.spike_max = spike_max
         self.wash_spike_idle = 0
@@ -23,7 +23,7 @@ class HeuristicSignalProcessor(SignalProcessor):
         self.cal = cal
         self.prev_sample = 0
         self.state = State.NONE
-        self.spike_det = SpikeDetector(10,wash_th)
+        self.spike_det = SpikeDetector(thresh=spike_th,rthresh=wash_th)
         self.count = -1
 
     def reset(self):
@@ -47,7 +47,7 @@ class HeuristicSignalProcessor(SignalProcessor):
         spike,spike_count = self.spike_det.process_sample(sample)
 
         self.wash_spike_idle +=1
-        if (spike > 0 and spike < 300 and (self.dry_time == 0 or self.dry_time > 10)):
+        if (spike > 0 and spike < self.spike_max*1.5 and (self.dry_time == 0 or self.dry_time > 10)):
             # print("%d: washy spike! %dx%dx%d" % (self.count,spike,spike_count,self.wash_spike_idle))
             self.wash_spike_idle = 0
 
@@ -66,9 +66,12 @@ class HeuristicSignalProcessor(SignalProcessor):
                 new_state = State.WASH
     
         elif (self.state == State.WASH): # WASH
+            self.wash_time += 1
             if (diff > self.dry_th or (spike > self.dry_th and spike_count <= 3)):
                 new_state = State.BOTH
                 self.dry_time = 0
+            if (self.wash_time > 120 and self.null_count > 10):
+                new_state = State.NONE
 
         elif (self.state == State.DRY): # DRY
             self.dry_time += 1
@@ -112,6 +115,7 @@ class HeuristicSignalProcessor(SignalProcessor):
         if new_state != self.state:
             if (new_state == State.NONE):
                 self.wash_time = 0
+                self.wash_spike_idle = 0
             if (new_state == State.DRY):
                 self.wash_time = 0
                 self.dry_time = 0
@@ -129,12 +133,15 @@ class HeuristicSignalProcessor(SignalProcessor):
         return self.state
 
 if __name__ == "__main__":
-    p = HeuristicSignalProcessor()
-    p.cal = 1
+
+
+    p = HeuristicSignalProcessor(idle_time=30)
+    #p = HeuristicSignalProcessor(spike_th=0.05,spike_max=1,wash_th=0.4,dry_th=4.5,idle_time=20)
+    p.cal = 180
     lc = 0
     for line in sys.stdin:
 
-        ns = p.process_sample(float(line))
+        ns = p.process_sample(pow(float(line),1.5)*70)
         lc += 1
         if (ns is not None):
             print("%d: %d" % (lc,ns.value))

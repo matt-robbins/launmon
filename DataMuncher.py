@@ -46,6 +46,15 @@ class DataMuncher:
             print ("failed to get calibration value for %s: %s" % (location, e))
             cal = 1.0
 
+        try:
+            cpow = self.db.getLocationCalibrationPow(location)
+        except Exception as e:
+            print ("failed to get calibration value for %s: %s" % (location, e))
+            cpow = 1.0
+
+        if not pow == 1.0:
+            data = pow(data,cpow)
+
         status = self.processors[location].process_sample(data*cal, only_diff=only_diff)
         if status is None:
             return

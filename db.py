@@ -30,7 +30,7 @@ class LaundryDb:
             """
             CREATE TABLE IF NOT EXISTS devices
             (device TEXT UNIQUE, location TEXT, port TEXT, 
-            calibration REAL, changed TIMESTAMP)
+            calibration REAL, cal_pow REAL, changed TIMESTAMP)
             """
         )
         self.create(
@@ -46,6 +46,13 @@ class LaundryDb:
             UNIQUE(endpoint,location))
             """
         )
+
+        try:
+            self.create("""
+                ALTER TABLE devices ADD COLUMN cal_pow REAL;
+            """)
+        except Exception as e:
+            pass
 
     def insert(self, query, args):
         with closing(sqlite3.connect(self.path)) as con:
@@ -275,7 +282,16 @@ class LaundryDb:
             pass
         
     def getLocationCalibration(self,location=None):
-        sqlt = """SELECT calibration FROM devices 
+        sqlt = """SELECT COALESCE(calibration,1.0) FROM devices 
+            JOIN locations ON devices.location = locations.location
+            WHERE devices.location = ?"""
+        try:
+            return float(self.fetch(sqlt, (location,))[0][0])
+        except Exception:
+            return 1.0
+
+    def getLocationCalibrationPow(self,location=None):
+        sqlt = """SELECT COALESCE(cal_pow,1.0) FROM devices 
             JOIN locations ON devices.location = locations.location
             WHERE devices.location = ?"""
         try:
